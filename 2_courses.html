@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<base href="http://localhost/Inspire_tech/Ai-full-project/">
+<title>Course Details - Inspire Tech Computer Academy</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+background:linear-gradient(120deg,#eef3ff,#ffffff);
+}
+
+/* NAVBAR SAME */
+.navbar{
+background:rgba(0,0,0,0.7);
+backdrop-filter:blur(10px);
+}
+
+.nav-link{
+color:white !important;
+transition:0.3s;
+}
+
+.nav-link:hover{
+color:#00ffd5 !important;
+}
+
+
+/* CARD */
+.course-detail{
+background:white;
+padding:40px;
+border-radius:20px;
+box-shadow:0 15px 40px rgba(0,0,0,0.1);
+margin-bottom:40px;
+transition:0.4s;
+scroll-margin-top:100px; /* offset for fixed navbar */
+}
+
+.course-detail:hover{
+transform:translateY(-10px);
+box-shadow:0 20px 50px rgba(0,0,0,0.2);
+}
+
+
+.course-title{
+color:#007bff;
+font-weight:bold;
+}
+
+
+.course-icon{
+font-size:40px;
+color:#00bcd4;
+}
+
+
+.btn-register{
+background:linear-gradient(45deg,#007bff,#00ffd5);
+border:none;
+padding:10px 30px;
+border-radius:30px;
+color:white;
+transition:0.3s;
+}
+
+.btn-register:hover{
+transform:scale(1.1);
+}
+
+
+footer{
+background:black;
+color:white;
+padding:40px;
+margin-top:50px;
+}
+
+.social i{
+margin:10px;
+font-size:20px;
+}
+
+    .support-wrapper {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        z-index: 9999;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* Main Toggle Button */
+    .support-main-btn {
+        width: 65px;
+        height: 65px;
+        background: linear-gradient(45deg, #00ffd5, #00a8ff);
+        border: none;
+        border-radius: 50%;
+        color: #000;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(0, 255, 213, 0.4);
+        position: relative;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .support-main-btn:hover { transform: scale(1.1); }
+
+    /* Ping Animation */
+    .ping {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #00ffd5;
+        border-radius: 50%;
+        z-index: -1;
+        animation: support-ping 2s infinite;
+    }
+
+    /* Popup Menu */
+    .support-menu {
+        position: absolute;
+        bottom: 80px;
+        left: 0;
+        width: 220px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 15px;
+        padding: 10px;
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+
+    .support-menu.show { display: flex; animation: fadeInUp 0.3s; }
+
+    /* Support Items */
+    .support-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 15px;
+        text-decoration: none;
+        color: #f8fafc;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+
+    .support-item i { font-size: 18px; width: 25px; text-align: center; }
+
+    .whatsapp:hover { background: rgba(37, 211, 102, 0.15); color: #25d366; }
+    .phone:hover { background: rgba(0, 168, 255, 0.15); color: #00a8ff; }
+    .email:hover { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
+
+    /* Animations */
+    @keyframes support-ping {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .d-none { display: none; }
+
+
+</style>
+
+</head>
+<body>
+
+
+<nav class="navbar navbar-expand-lg fixed-top">
+<div class="container">
+
+<a class="navbar-brand text-white">Inspire Tech</a>
+
+<ul class="navbar-nav ms-auto">
+<li class="nav-item"><a class="nav-link" href="home_page.php">Home</a></li>
+<li class="nav-item"><a class="nav-link" href="1_courses.html">Courses</a></li>
+<li class="nav-item"><a class="nav-link" href="student-portal.php">Student Portal</a></li>
+<li class="nav-item"><a class="nav-link" href="/contact.php">Contact</a></li>
+</ul>
+
+</div>
+</nav>
+
+
+
+<!-- CONTENT -->
+<div class="container" style="margin-top:100px; margin-bottom:50px; max-width:1100px;">
+
+
+<!-- MS OFFICE -->
+<div id="ms-office" class="course-detail">
+
+<i class="fa-file-word fa-solid course-icon"></i>
+
+<h2 class="course-title">MS Office Course</h2>
+
+<hr>
+
+<p><b>Duration:</b> 3 Months</p>
+<p><b>Fee:</b> Contact for details</p>
+
+<p><b>Syllabus:</b></p>
+
+<ul>
+<li>MS Word Complete</li>
+<li>MS Excel Complete</li>
+<li>MS PowerPoint</li>
+<li>Office Professional Work</li>
+</ul>
+
+
+<a href="student-portal.php" class="btn-register">Register Now</a>
+
+
+</div>
+
+
+<!-- CIT -->
+<div id="cit" class="course-detail">
+
+<i class="fa-computer fa-solid course-icon"></i>
+
+<h2 class="course-title">CIT Course</h2>
+
+<hr>
+
+<p><b>Duration:</b> 6 Months</p>
+<p><b>Fee:</b> Contact for details</p>
+
+<p><b>Syllabus:</b></p>
+
+<ul>
+<li>Computer Basics</li>
+<li>MS Office</li>
+<li>Internet</li>
+<li>Typing</li>
+</ul>
+<a href="student-portal.php" class="btn-register">Register Now</a>
+
+</div>
+
+
+<!-- DIT -->
+<div id="dit" class="course-detail">
+
+<i class="fa-laptop-code fa-solid course-icon"></i>
+
+<h2 class="course-title">DIT Course</h2>
+
+<hr>
+<p><b>Duration:</b> 6 Months & 1 Year</p>
+<p><b>Fee:</b> Contact for details</p>
+<ul>
+<li>MS Office</li>
+<li>Web_development</li>
+<li>Graphic Design</li>
+<li>IT Professional Skills</li>
+</ul>
+<a href="student-portal.php" class="btn-register">Register Now</a>
+
+</div>
+
+
+<!-- TYPING -->
+<div id="typing" class="course-detail">
+
+<i class="fa-keyboard fa-solid course-icon"></i>
+
+<h2 class="course-title">Typing Course</h2>
+
+<hr>
+<p><b>Duration:</b> 2 Months</p>
+<p><b>Fee:</b> Contact for details</p>
+<ul>
+<li>English Typing</li>
+<li>Urdu Typing</li>
+<li>Speed Test</li>
+</ul>
+<a href="student-portal.php" class="btn-register">Register Now</a>
+</div>
+
+
+<!-- DIGITAL MARKETING -->
+<div id="digital-marketing" class="course-detail">
+
+<i class="fa-bullhorn fa-solid course-icon"></i>
+
+<h2 class="course-title">Digital Marketing</h2>
+
+<hr>
+<p><b>Duration:</b> 2 Months</p>
+<p><b>Fee:</b> Contact for details</p>
+<ul>
+<li>Facebook Marketing</li>
+<li>YouTube</li>
+<li>Freelancing</li>
+</ul>
+<a href="student-portal.php" class="btn-register">Register Now</a>
+
+</div>
+
+
+<!-- Web_development -->
+<div id="web-development" class="course-detail">
+
+<i class="fa-code fa-solid course-icon"></i>
+<a href="https://wa.me/923462345453"></a>
+<h2 class="course-title">Web_development</h2>
+
+<hr>
+<p><b>Duration:</b> 6 Months & 1 Year</p>
+<p><b>Fee:</b> Contact for details</p>
+<ul>
+<li>HTML</li>
+<li>CSS</li>
+<li>JavaScript</li>
+<li>Bootstrap</li>
+</ul>
+<a href="student-portal.php" class="btn-register">Register Now</a>
+
+</div>
+
+
+<!-- AI -->
+<div id="ai" class="course-detail">
+
+<i class="fa-robot fa-solid course-icon"></i>
+
+<h2 class="course-title">Artificial Intelligence</h2>
+
+<hr>
+<p><b>Duration:</b> 6 Months</p>
+<p><b>Fee:</b> Contact for details</p>
+<ul>
+<li>Python</li>
+<li>Machine Learning</li>
+<li>Deep Learning</li>
+<li>Projects</li>
+</ul>
+<a href="student-portal.php" class="btn-register">Register Now</a>
+</div>
+
+<div id="python" class="course-detail">
+
+<i class="fa-robot fa-solid course-icon"></i>
+
+<h2 class="course-title">Python</h2>
+
+<hr>
+<p><b>Duration:</b> 6 Months</p>
+<p><b>Fee:</b> Contact for details</p>
+<ul>
+<li>Python</li>
+<li>Machine Learning</li>
+<li>Deep Learning</li>
+<li>Projects</li>
+</ul>
+<a href="student-portal.php" class="btn-register">Register Now</a>
+</div>
+
+
+</div>
+</div>
+
+
+
+
+<!-- FOOTER (simplified) -->
+<footer>
+  <div class="container text-center py-4">
+    <p class="mb-1">Questions? <a href="contact.php#contact">Contact us</a>.</p>
+    <p class="mb-0">© 2026 Inspire Tech Computer Academy</p>
+  </div>
+</footer>
+
+<i class="fab fa-whatsapp"></i>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</footer>
+
+<div class="support-wrapper">
+    <div class="support-menu" id="supportMenu">
+        <a href="https://wa.me/923462345453" target="_blank" class="support-item whatsapp">
+            <i class="fab fa-whatsapp"></i>
+            <span>WhatsApp Support</span>
+        </a>
+        <a href="tel:03462345453" class="support-item phone">
+            <i class="fas fa-phone-alt"></i>
+            <span>Call Raheel Ahmad</span>
+        </a>
+        <a href="mailto:support@inspiretech.com" class="support-item email">
+            <i class="fas fa-envelope"></i>
+            <span>Email Inquiry</span>
+        </a>
+    </div>
+
+    <button class="support-main-btn" onclick="toggleSupport()">
+        <i class="fas fa-headset" id="supportIcon"></i>
+        <i class="fas fa-times d-none" id="closeIcon"></i>
+        <span class="ping"></span>
+    </button>
+</div>
+
+<script>
+    function toggleSupport() {
+        const menu = document.getElementById('supportMenu');
+        const supportIcon = document.getElementById('supportIcon');
+        const closeIcon = document.getElementById('closeIcon');
+        
+        menu.classList.toggle('show');
+        supportIcon.classList.toggle('d-none');
+        closeIcon.classList.toggle('d-none');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(event) {
+        const wrapper = document.querySelector('.support-wrapper');
+        const menu = document.getElementById('supportMenu');
+        if (!wrapper.contains(event.target)) {
+            menu.classList.remove('show');
+            document.getElementById('supportIcon').classList.remove('d-none');
+            document.getElementById('closeIcon').classList.add('d-none');
+        }
+    });
+</script>
+<script>
+    // Smooth scroll to footer when clicking contact links and collapse navbar on mobile
+    document.querySelectorAll('a.nav-link[href$="#contact"]').forEach(function(el){
+        el.addEventListener('click', function(e){
+            // if current page has the contact element, prevent default and scroll smoothly
+            var target = document.getElementById('contact');
+            // if there is no target on this page, let browser navigate normally (will go to contact.php)
+
+            if(target){
+                e.preventDefault();
+                target.scrollIntoView({behavior: 'smooth', block: 'start'});
+                // collapse navbar if open (Bootstrap)
+                var bsCollapse = document.querySelector('.navbar-collapse');
+                if(bsCollapse && bsCollapse.classList.contains('show')){
+                    var collapseInstance = bootstrap.Collapse.getInstance(bsCollapse) || new bootstrap.Collapse(bsCollapse);
+                    collapseInstance.hide();
+                }
+            }
+        });
+    });
+</script>
+<script src="support-hub.js"></script>
+</body>
+</html>

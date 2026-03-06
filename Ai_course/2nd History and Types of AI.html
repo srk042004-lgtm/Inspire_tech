@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Class 2 - Comprehensive Deep Dive | Inspire Tech</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f0f4f8;
+        padding-top: 90px;
+        color: #333;
+        line-height: 1.6;
+      }
+      .navbar {
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom: 2px solid #00ffd5;
+      }
+      .navbar-brand {
+        font-weight: bold;
+        color: #00ffd5 !important;
+      }
+      .nav-link {
+        color: white !important;
+        margin-left: 15px;
+        transition: 0.3s;
+      }
+      .nav-link:hover {
+        color: #00ffd5 !important;
+      }
+
+      .sidebar {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        position: sticky;
+        top: 110px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      }
+      .sidebar h5 {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        font-weight: bold;
+      }
+      .class-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        margin-bottom: 8px;
+        border-radius: 12px;
+        color: #444;
+        text-decoration: none;
+        transition: 0.3s;
+        background: #f8f9fa;
+      }
+      .class-item i {
+        margin-right: 12px;
+        color: #007bff;
+      }
+      .class-item:hover,
+      .class-item.active {
+        background: linear-gradient(45deg, #007bff, #00ffd5);
+        color: white;
+        transform: translateX(5px);
+      }
+
+      .content-card {
+        background: white;
+        border-radius: 25px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border-left: 5px solid #007bff;
+      }
+      .topic-header {
+        color: #007bff;
+        font-weight: 800;
+        margin-bottom: 20px;
+      }
+
+      .video-box {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 20px;
+        background: #000;
+        margin: 25px 0;
+      }
+      .video-box iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #quiz-box {
+        background: #121212;
+        color: white;
+        padding: 35px;
+        border-radius: 25px;
+        border-top: 5px solid #00ffd5;
+      }
+      .quiz-option {
+        cursor: pointer;
+        border: 2px solid #333;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        transition: 0.3s;
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .quiz-option:hover {
+        border-color: #00ffd5;
+        background: rgba(0, 255, 213, 0.1);
+      }
+
+      footer {
+        background: #000;
+        color: white;
+        padding: 60px 0 20px 0;
+        margin-top: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">Inspire Tech</a>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="../home_page.php">Home</a></li>
+            <li class="nav-item">
+              <a class="nav-link active" href="../student-portal.php">Student Portal</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+    <div class="row">
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sidebar">
+                <h5>Ai_course Map</h5>
+                <a href="Ai_course/1st Ai intro and Space Search.html" class="class-item"><i class="fas fa-play-circle"></i> 01. Intro & State Space</a>
+                <a href="Ai_course/2nd History and Types of AI.html" class="class-item active"><i class="fas fa-lock"></i> 02. History and Type Of AI</a>
+                <a href="Ai_course/3rd Prompt and its engineering.html" class="class-item"><i class="fas fa-lock"></i> 03. Prompts and its Engineering</a>
+                
+
+
+            </div>
+        </div>
+
+
+     
+        <div class="col-lg-9">
+          <div class="content-card">
+            <h2 class="topic-header">1. The Detailed History of AI</h2>
+            <p>
+              The journey of Artificial Intelligence began in the 1950s when
+              pioneers like Alan Turing explored the mathematical possibility of
+              machine intelligence. In 1956, the Dartmouth Workshop officially
+              birthed AI as a research field, leading to an era of great
+              optimism where scientists built machines that could solve algebra
+              word problems and speak English. However, the field faced several
+              "AI Winters"—periods where funding disappeared because computers
+              weren't yet powerful enough to handle complex tasks. The 1990s saw
+              a massive revival when IBM's Deep Blue defeated a world chess
+              champion, proving that logical processing was reaching human
+              levels. By the 2010s, Big Data and powerful GPUs allowed "Deep
+              Learning" to take over, leading to the rapid smart-tech world we
+              live in today. Now in 2026, we are witnessing AI that can reason,
+              create, and assist in almost every professional industry
+              worldwide.
+            </p>
+            <div class="video-box">
+              <iframe
+                width="560"
+                height="315"
+                src="https://www.youtube.com/embed/0BsFeyCaGe8?si=i6Qi7KjlmSYpg4-e"
+                title="YouTube video player"
+                frameborder="0"
+                allow="
+                  accelerometer;
+                  autoplay;
+                  clipboard-write;
+                  encrypted-media;
+                  gyroscope;
+                  picture-in-picture;
+                  web-share;
+                "
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2 class="topic-header">2. Different Types of AI Explained</h2>
+            <p>
+              AI is categorized into three main levels based on its ability to
+              perform human-like tasks. The first is Narrow AI (ANI), which is
+              designed for a single task like Google Search or facial
+              recognition; it is highly efficient but cannot perform outside its
+              programmed limit. The second level is General AI (AGI), which
+              refers to a machine that can understand, learn, and apply its
+              intelligence to any problem just like a human being can. While AGI
+              is still the "Holy Grail" of research, we are seeing hints of it
+              in large multimodal models. The third level is Super AI (ASI), a
+              hypothetical stage where machine intelligence surpasses the
+              collective brainpower of all humanity across every field.
+              Additionally, AI is classified by functionality: Reactive Machines
+              have no memory, Limited Memory machines (like self-driving cars)
+              use recent data to make decisions, and "Theory of Mind" AI aims to
+              understand human emotions. Understanding these types helps us
+              realize that while AI is powerful, it is currently mostly
+              specialized rather than all-knowing.
+            </p>
+
+            <div class="video-box">
+              <iframe
+                width="560"
+                height="315"
+                src="https://www.youtube.com/embed/sbc25yFurFE?si=Ip7fvnlqAI1D1aFu"
+                title="YouTube video player"
+                frameborder="0"
+                allow="
+                  accelerometer;
+                  autoplay;
+                  clipboard-write;
+                  encrypted-media;
+                  gyroscope;
+                  picture-in-picture;
+                  web-share;
+                "
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2 class="topic-header">
+              3. What is Generative AI and How it Works
+            </h2>
+            <p>
+              Generative AI represents a massive shift from traditional AI
+              because it doesn't just analyze data; it creates entirely new
+              content from scratch. It works by using "Neural Networks" trained
+              on massive datasets of text, images, or code to understand the
+              underlying patterns of human creation. When you provide a prompt,
+              the system uses a "Transformer" architecture to predict the most
+              statistically likely next word or pixel based on its training.
+              Unlike a search engine that finds existing links, Generative AI
+              "synthesizes" information to write essays, generate
+              hyper-realistic photos, or even compose music. This process
+              involves layers of mathematical weights that adjust as the AI
+              learns the difference between a high-quality result and a poor
+              one. This technology is the engine behind famous tools like
+              ChatGPT, Midjourney, and Google Gemini, making it a vital skill
+              for the modern workforce. At Inspire Tech, we teach you how to
+              master these tools to stay ahead of the digital curve.
+            </p>
+            <div class="video-box">
+              <iframe
+                width="560"
+                height="315"
+                src="https://www.youtube.com/embed/75KZqdfaMmk?si=1jO9haAIGjA8j2ll"
+                title="YouTube video player"
+                frameborder="0"
+                allow="
+                  accelerometer;
+                  autoplay;
+                  clipboard-write;
+                  encrypted-media;
+                  gyroscope;
+                  picture-in-picture;
+                  web-share;
+                "
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2 class="topic-header">
+              4. The Mechanics: How AI Actually Works
+            </h2>
+            <p>
+              To understand how AI works, you must think of it as a three-part
+              system: Data, Algorithms, and Computing Power. First, AI requires
+              a "Training Set" of millions of examples, such as photos of cars,
+              which serve as the raw material for learning. Second, an algorithm
+              (a set of mathematical rules) processes this data to find hidden
+              patterns and features that a human might never notice. Third,
+              "Neural Networks" act as a digital version of the human brain,
+              passing information through various "hidden layers" to reach a
+              final decision or prediction. Each time the AI makes a mistake,
+              the system uses a process called "Backpropagation" to correct
+              itself and improve its accuracy for the next time. This continuous
+              cycle of input, processing, and self-correction is what allows a
+              computer to eventually "recognize" a face or "translate" a
+              language instantly. Without high-speed hardware like modern GPUs,
+              these billions of mathematical calculations would be impossible to
+              perform in real-time.
+            </p>
+
+            <div class="video-box">
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/hI9BqY7GieM?si=3I2S6ZQn-Vm5XRaU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2 class="topic-header">5. Best Ways to Earn Money Using AI</h2>
+            <p>
+              The AI revolution has opened up dozens of new income streams for
+              students and freelancers who know how to use these tools
+              effectively. One of the most profitable skills today is "Prompt
+              Engineering," which involves crafting the perfect instructions for
+              AI to produce high-end commercial results for businesses. You can
+              also earn significantly by offering "AI Content Automation"
+              services, where you use tools to generate high-quality blogs,
+              social media posts, and scripts for global clients 10 times faster
+              than traditional writers. Another huge opportunity lies in
+              building "Custom AI Chatbots" for local businesses in Nowshera or
+              on international platforms like Upwork, helping companies automate
+              their customer support. Furthermore, AI-driven video editing and
+              image generation allow you to sell professional digital art or
+              YouTube services with minimal manual labor. By combining your
+              creativity with AI efficiency, you can handle multiple clients at
+              once, effectively multiplying your monthly income. Inspire Tech
+              focuses on these practical skills to ensure our students become
+              successful digital entrepreneurs.
+            </p>
+            <div class="video-box">
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/Gct5i3A-Ob0?si=D_bMp6sRHcPJhFsh" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+          </div>
+
+          <div id="quiz-box">
+            <h3 class="text-info mb-4">Class 2 Knowledge Check</h3>
+            <div id="quiz-content">
+              <h5 id="question-text">
+                Q1: Which type of AI is currently used in most of our daily apps
+                (like YouTube or Siri)?
+              </h5>
+              <div id="options-container" class="mt-3">
+                <div class="quiz-option" onclick="processQuiz(true)">
+                  Narrow AI (ANI)
+                </div>
+                <div class="quiz-option" onclick="processQuiz(false)">
+                  Super AI (ASI)
+                </div>
+                <div class="quiz-option" onclick="processQuiz(false)">
+                  General AI (AGI)
+                </div>
+              </div>
+              <div id="feedback" class="mt-3 fw-bold"></div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-5 mb-5">
+            <button
+              class="btn btn-secondary btn-lg rounded-pill px-4"
+              onclick="history.back()"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Previous Page
+            </button>
+            <button class="btn btn-primary btn-lg rounded-pill px-5 shadow">
+              Next Page <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="container text-center text-md-start">
+        <div class="row">
+          <div class="col-md-6 mb-4">
+            <div class="fw-bold text-info fs-4 mb-2">
+              Inspire Tech Computer Academy
+            </div>
+            <p>
+              Building the next generation of IT professionals in Pakistan
+              through advanced AI training.
+            </p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p>Location: Second Floor, Khattak Building, Nowshera Cantt</p>
+            <p>Contact: Raheel Ahmad | 03462345453</p>
+          </div>
+        </div>
+        <hr class="bg-secondary" />
+        <center class="small opacity-50">
+          © 2026 Inspire Tech. All Rights Reserved.
+        </center>
+      </div>
+    </footer>
+
+    <script>
+      let step = 1;
+      function processQuiz(isCorrect) {
+        const feedback = document.getElementById("feedback");
+        const questionText = document.getElementById("question-text");
+        const optionsContainer = document.getElementById("options-container");
+
+        if (isCorrect) {
+          feedback.innerHTML =
+            "<span class='text-success'>Correct Answer! Moving to the next challenge...</span>";
+          setTimeout(() => {
+            if (step === 1) {
+              step = 2;
+              questionText.innerText =
+                "Q2: What is the primary technology that allows Generative AI to predict and create content?";
+              optionsContainer.innerHTML = `
+                        <div class="quiz-option" onclick="processQuiz(true)">Transformer Architecture</div>
+                        <div class="quiz-option" onclick="processQuiz(false)">A simple search engine</div>
+                        <div class="quiz-option" onclick="processQuiz(false)">Manual coding</div>
+                    `;
+              feedback.innerText = "";
+            } else {
+              feedback.innerHTML =
+                "<span class='text-info'>🎉 Congratulations! You have mastered Class 2 topics.</span>";
+              optionsContainer.innerHTML = `<div class='alert alert-success mt-3'>Topic Mastery Achieved. Proceed to the next page!</div>`;
+            }
+          }, 1500);
+        } else {
+          feedback.innerHTML =
+            "<span class='text-danger animate__animated animate__shakeX'>Incorrect answer! Please review the details above and try again.</span>";
+        }
+      }
+    </script>
+<script src="/support-hub.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

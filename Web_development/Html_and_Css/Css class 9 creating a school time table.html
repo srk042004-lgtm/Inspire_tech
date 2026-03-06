@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      Inspire Tech Academy - CSS Class 9: Creating a School Time Table
+    </title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      /* Hide list items when not matched */
+      .list-group-item.hidden {
+        display: none;
+      }
+      /* Ensure current page link is highlighted */
+      .course-list a.active-link {
+        font-weight: bold;
+        color: #0d6efd; /* Bootstrap primary color */
+      }
+      /* Ensure main content doesn't get hidden under fixed navbar */
+      .main-content {
+        padding-top: 20px; /* Adjust as needed */
+      }
+
+      /* *** REVISED CSS FOR TIMETABLE *** */
+      .timetable-container {
+        overflow-x: auto; /* Ensures horizontal scrolling on small screens */
+        margin: 20px 0;
+      }
+      .timetable {
+        width: 100%;
+        border-collapse: collapse; /* This is essential: removes double lines */
+        min-width: 600px; /* Prevents squishing on very small screens */
+      }
+      .timetable th,
+      .timetable td {
+        border: 1px solid #dee2e6; /* Standard border color */
+        padding: 12px;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+      .timetable thead th {
+        background-color: #0d6efd;
+        color: white;
+        font-weight: bold;
+      }
+      .timetable tbody tr:nth-child(even) {
+        background-color: #f8f9fa; /* Zebra stripping for readability */
+      }
+      .timetable .lunch-break {
+        background-color: #ffc107;
+        color: black;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
+      <div class="container">
+        <button
+          id="sidebarToggle"
+          class="btn btn-outline-light d-lg-none me-2"
+          aria-label="Toggle sidebar"
+          aria-controls="sidebar"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+        <a class="navbar-brand fw-bold" href="/index.html"
+          >Inspire Tech Institute</a
+        >
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navMenu"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/Class 1 html.html">Courses</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#contact">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <aside
+          id="sidebar"
+          class="col-lg-3 col-md-4 bg-light border-end vh-100 overflow-auto p-3 sticky-sidebar"
+        >
+          <h5 class="fw-bold">Courses</h5>
+          <div class="mb-3">
+            <input
+              type="text"
+              id="searchInput"
+              class="form-control"
+              placeholder="Search topics..."
+            />
+          </div>
+
+          <div class="accordion" id="coursesAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <a
+                  href="/Class 1 html.html"
+                  class="accordion-button collapsed text-decoration-none"
+                >
+                  HTML Full Course
+                </a>
+              </h2>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#cssCourse"
+                  aria-expanded="true"
+                >
+                  CSS Full Course
+                </button>
+              </h2>
+              <div
+                id="cssCourse"
+                class="accordion-collapse collapse show"
+                data-bs-parent="#coursesAccordion"
+              >
+                <div class="accordion-body p-0">
+                  <ul class="list-group list-group-flush course-list">
+                    <li class="list-group-item">
+                      <a
+                        href="/Css Class 1 Syntax.html"
+                        class="text-decoration-none"
+                      >
+                        Class 1: Introduction, Syntax & Selectors
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 2 border background margin.html"
+                        class="text-decoration-none"
+                      >
+                        Class 2: Css border background margin And Padding
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 3 text align transform and outline.html"
+                        class="text-decoration-none"
+                      >
+                        Class 3: Text Alignment, Transformations & Outlines
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 4 fonts liststyle overflow icons.html"
+                        class="text-decoration-none"
+                      >
+                        Class 4: Fonts, List Styles, Overflow & Icons
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 5 Table & display design and properties.html"
+                        class="text-decoration-none"
+                      >
+                        Class 5: Table & Display Property & Design Properties
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 6 position selector and float .html"
+                        class="text-decoration-none"
+                      >
+                        Class 6: Positioning, Advanced Selectors & Float
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css Class 7 Pseudo tooltip hover before and after.html"
+                        class="text-decoration-none"
+                      >
+                        Class 7: Pseudo-classes, Tooltips & Hover Effects
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 8 navbar design and position.html"
+                        class="text-decoration-none"
+                      >
+                        Class 8: Navbar Design & Positioning
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 9 creating a school time table.html"
+                        class="text-decoration-none active-link"
+                      >
+                        Class 9: Creating a School Timetable
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 10 dropdown creation.html"
+                        class="text-decoration-none"
+                      >
+                        Class 10: Dropdown Creation
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 11 responsive input form.html"
+                        class="text-decoration-none"
+                      >
+                        Class 11: Responsive Input Form
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 12 Responsive image gallery.html"
+                        class="text-decoration-none"
+                      >
+                        Class 12: Responsive Image Gallery
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 13 full Css revision.html"
+                        class="text-decoration-none"
+                      >
+                        Class 13: Full CSS Revision
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <a
+                        href="/Css class 14 Excercise & test.html"
+                        class="text-decoration-none"
+                      >
+                        Class 14: Exercise & Test
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <a
+                  href="js-course.html"
+                  class="accordion-button collapsed text-decoration-none"
+                >
+                  JavaScript Full Course
+                </a>
+              </h2>
+            </div>
+          </div>
+        </aside>
+
+        <main class="col-lg-9 col-md-8 main-content p-4">
+          <section id="css9-main" class="mb-5">
+            <div class="card shadow-lg border-0">
+              <div class="card-body">
+                <h3 class="fw-bold mb-3 text-primary">
+                  🗓️ Class 9: Creating a School Timetable
+                </h3>
+
+                <div
+                  class="ratio ratio-16x9 mb-4 border border-secondary rounded p-1"
+                >
+                  <iframe width="560" height="315" src="https://www.youtube.com/embed/-xhSdBlZxTQ?si=_7N0rDXu5YBgnqIs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                    <p style="text-align: center; line-height: 315px">
+                      **PLACEHOLDER FOR MAIN VIDEO EMBED**
+                    </p>
+                  </iframe>
+                </div>
+
+                <p>
+                  This practical class focuses on combining HTML table structure
+                  with advanced CSS styling to create a clear and well-organized
+                  school timetable. We will heavily utilize the **`colspan`**
+                  and **`rowspan`** attributes in HTML, and use CSS to ensure a
+                  professional, consistent look.
+                </p>
+
+                <hr />
+
+                <div id="html-table-structure" class="my-4">
+                  <h4 class="fw-bold text-success mb-3">
+                    🧱 Step 1: HTML Table Structure
+                  </h4>
+
+                  
+
+                  <p>
+                    A timetable requires complex cells that span multiple
+                    columns or rows.
+                  </p>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                      **`colspan`**: Used to make a cell take up the space of
+                      multiple columns horizontally (e.g., spanning a lunch
+                      break across all days).
+                    </li>
+                    <li class="list-group-item">
+                      **`rowspan`**: Used to make a cell take up the space of
+                      multiple rows vertically (e.g., spanning a long lab
+                      session across two time slots).
+                    </li>
+                  </ul>
+
+                  <h6 class="fw-bold text-secondary mt-3">
+                    Example Timetable HTML:
+                  </h6>
+                  <pre class="bg-dark text-white p-2 rounded mt-3"><code>
+&lt;div class="timetable-container"&gt;
+    &lt;table class="timetable"&gt;
+        &lt;thead&gt;
+            &lt;tr&gt;
+                &lt;th&gt;Time&lt;/th&gt;
+                &lt;th&gt;Monday&lt;/th&gt;
+                &lt;th&gt;Tuesday&lt;/th&gt;
+                &lt;th&gt;Wednesday&lt;/th&gt;
+                &lt;th&gt;Thursday&lt;/th&gt;
+                &lt;th&gt;Friday&lt;/th&gt;
+            &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+            &lt;tr&gt;
+                &lt;td&gt;9:00 - 10:00&lt;/td&gt;
+                &lt;td&gt;Math&lt;/td&gt;
+                &lt;td&gt;Physics&lt;/td&gt;
+                &lt;td&gt;Chemistry&lt;/td&gt;
+                &lt;td&gt;English&lt;/td&gt;
+                &lt;td rowspan="2"&gt;Lab Session&lt;/td&gt;
+            &lt;/tr&gt;
+            &lt;tr&gt;
+                &lt;td&gt;10:00 - 11:00&lt;/td&gt;
+                &lt;td&gt;History&lt;/td&gt;
+                &lt;td&gt;Urdu&lt;/td&gt;
+                &lt;td&gt;Islamiat&lt;/td&gt;
+                &lt;td&gt;Geography&lt;/td&gt;
+            &lt;/tr&gt;
+            &lt;tr class="lunch-break"&gt;
+                &lt;td colspan="6"&gt;LUNCH BREAK (11:00 - 12:00)&lt;/td&gt;
+            &lt;/tr&gt;
+            &lt;tr&gt;
+                &lt;td&gt;12:00 - 1:00&lt;/td&gt;
+                &lt;td&gt;CS&lt;/td&gt;
+                &lt;td&gt;Math&lt;/td&gt;
+                &lt;td&gt;CS&lt;/td&gt;
+                &lt;td&gt;Physics&lt;/td&gt;
+                &lt;td&gt;Math&lt;/td&gt;
+            &lt;/tr&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+&lt;/div&gt;
+                            </code></pre>
+                </div>
+
+                <hr />
+
+                <div id="table-css" class="my-4">
+                  <h4 class="fw-bold text-success mb-3">
+                    🎨 Step 2: Essential CSS Styling
+                  </h4>
+
+                  
+
+                  <p>
+                    The key to fixing your "disturbed" table display lies in
+                    three crucial CSS properties:
+                  </p>
+                  <dl class="row">
+                    <dt class="col-sm-4">**`border-collapse: collapse;`**</dt>
+                    <dd class="col-sm-8">
+                      This **removes the double borders** that often make tables
+                      look messy, replacing them with a single, clean border.
+                    </dd>
+                    <dt class="col-sm-4">**`width: 100%;`**</dt>
+                    <dd class="col-sm-8">
+                      Ensures the table stretches to fill the available space of
+                      its container.
+                    </dd>
+                    <dt class="col-sm-4">**`padding` on `th` and `td`**</dt>
+                    <dd class="col-sm-8">
+                      Adds spacing inside the cells, which improves readability
+                      and professional appearance.
+                    </dd>
+                  </dl>
+                  <h6 class="fw-bold text-secondary mt-3">
+                    The Correct CSS to Fix Borders:
+                  </h6>
+                  <pre class="bg-dark text-white p-2 rounded mt-3"><code>
+.timetable {
+  width: 100%;
+  /* FIX: Merges double borders into single borders */
+  border-collapse: collapse; 
+  min-width: 600px; /* Ensures space for content */
+}
+
+.timetable th, .timetable td {
+  /* FIX: Applies border to every cell edge */
+  border: 1px solid #dee2e6;
+  padding: 12px;
+}
+                            </code></pre>
+                </div>
+
+                <hr />
+
+                <div id="advanced-styling" class="my-4">
+                  <h4 class="fw-bold text-success mb-3">
+                    ✨ Step 3: Advanced Styling (Zebra Striping & Highlighting)
+                  </h4>
+
+                  
+                  <p>
+                    To make the timetable easier to read, we use advanced
+                    selectors for styling:
+                  </p>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                      **Zebra Striping**: Using the **`:nth-child(even)`**
+                      pseudo-class to apply a light background to every second
+                      row, dramatically improving legibility.
+                    </li>
+                    <li class="list-group-item">
+                      **Highlighting**: Creating specific classes (like
+                      `.lunch-break`) to highlight important rows using distinct
+                      background colors.
+                    </li>
+                    <li class="list-group-item">
+                      **Responsiveness**: Wrapping the entire table in a
+                      container with **`overflow-x: auto;`** allows the user to
+                      scroll horizontally on small phone screens, preventing the
+                      table from breaking the layout.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="container text-center my-5">
+            <a
+              href="/Css class 8 navbar design and position.html"
+              class="btn btn-secondary me-2"
+              >⬅ Previous Class</a
+            >
+            <a
+              href="/Css class 10 dropdown creation.html"
+              class="btn btn-primary"
+              >Next Class ➡</a
+            >
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <footer id="contact" class="bg-dark text-white text-center p-3 mt-4">
+      <div class="container">
+        <p class="mb-1">📍 Inspire Tech Institute | Nowshera, Pakistan</p>
+        <p class="mb-1">📞 0346-2345453 | ✉ info@inspiretech.com</p>
+        <p>Follow us on Facebook, Instagram & YouTube</p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
