@@ -15,9 +15,41 @@ $conn->query("ALTER TABLE students
     ADD COLUMN IF NOT EXISTS fmobile VARCHAR(50) DEFAULT '',
     ADD COLUMN IF NOT EXISTS password VARCHAR(255) DEFAULT '',
     ADD COLUMN IF NOT EXISTS picture VARCHAR(255) DEFAULT '',
-    ADD COLUMN IF NOT EXISTS enrolled_course VARCHAR(255) DEFAULT ''");
+    ADD COLUMN IF NOT EXISTS enrolled_course VARCHAR(255) DEFAULT '',
+    ADD COLUMN IF NOT EXISTS course_fee_id INT DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS assigned_teacher_id INT DEFAULT NULL");
+
+// Ensure course fee table exists for registration/course selection
+$conn->query("CREATE TABLE IF NOT EXISTS course_fees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_name VARCHAR(255) UNIQUE,
+    total_fee DECIMAL(10,2) DEFAULT 0
+)");
+
+// Seed default course list if missing
+$seedCheck = $conn->query("SELECT COUNT(*) as cnt FROM course_fees")->fetch_assoc();
+if ($seedCheck && $seedCheck['cnt'] == 0) {
+    $courses = [
+        ['DIT', 15000],
+        ['CIT', 18000],
+        ['MsOffice', 12000],
+        ['Web-dev', 25000],
+        ['Python', 22000],
+        ['AI', 28000]
+    ];
+    foreach ($courses as $c) {
+        $course = $conn->real_escape_string($c[0]);
+        $fee = (float)$c[1];
+        $conn->query("INSERT INTO course_fees (course_name, total_fee) VALUES ('$course', $fee)");
+    }
+}
+
+$courseFees = $conn->query("SELECT id, course_name, total_fee FROM course_fees ORDER BY course_name");
 
 $message = "";
+
+// Provide teacher list for optional assignment
+$teacherOptions = $conn->query("SELECT id, name FROM teachers WHERE status='active' ORDER BY name");
 
 // 2. PHP Logic to handle the form submission
 if (isset($_POST['register'])) {
@@ -32,8 +64,18 @@ if (isset($_POST['register'])) {
     $last_degree = $_POST['last_degree'] ?? '';
     $mobile = $_POST['mobile'] ?? '';
     $fmobile = $_POST['fmobile'] ?? '';
-    $enrolled_course = $_POST['enrolled_course'] ?? ''; // ensure course field supplied
-    
+    $courseFeeId = isset($_POST['course_fee_id']) ? (int)$_POST['course_fee_id'] : 0;
+    $enrolled_course = '';
+    $total_fee = 0;
+
+    if ($courseFeeId) {
+        $courseRow = $conn->query("SELECT course_name, total_fee FROM course_fees WHERE id = $courseFeeId")->fetch_assoc();
+        if ($courseRow) {
+            $enrolled_course = $conn->real_escape_string($courseRow['course_name']);
+            $total_fee = (float)$courseRow['total_fee'];
+        }
+    }
+
     // Hash password for security
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
@@ -44,10 +86,13 @@ if (isset($_POST['register'])) {
     $pic_name = time() . "_" . basename($_FILES["pic"]["name"]);
     $target_file = $target_dir . $pic_name;
 
+    // Determine assigned teacher (if selected)
+    $assignedTeacher = isset($_POST['assigned_teacher']) ? (int)$_POST['assigned_teacher'] : 0;
+
     if (move_uploaded_file($_FILES["pic"]["tmp_name"], $target_file)) {
         // Insert into Database
-        $sql = "INSERT INTO students (name, fname, dob, district, email, nic, qualification, last_degree, mobile, fmobile, password, picture, enrolled_course) 
-                VALUES ('$name', '$fname', '$dob', '$district', '$email', '$nic', '$qualification', '$last_degree', '$mobile', '$fmobile', '$password', '$pic_name', '$enrolled_course')";
+        $sql = "INSERT INTO students (name, fname, dob, district, email, nic, qualification, last_degree, mobile, fmobile, password, picture, enrolled_course, course_fee_id, total_fee, paid_fee, assigned_teacher_id) 
+                VALUES ('$name', '$fname', '$dob', '$district', '$email', '$nic', '$qualification', '$last_degree', '$mobile', '$fmobile', '$password', '$pic_name', '$enrolled_course', $courseFeeId, $total_fee, 0, " . ($assignedTeacher ? $assignedTeacher : 'NULL') . ")";
         if (mysqli_query($conn, $sql)) {
             echo "<script>alert('Registration Successful! Please Login.'); window.location.href='student-portal.php';</script>";
         } else {
@@ -250,15 +295,21 @@ if (isset($_POST['register'])) {
                         
                         <div class="col-md-6 mb-3">
                             <label class="form-label small fw-bold text-primary">Course to Enroll</label>
-                            <select name="enrolled_course" class="form-select border-primary" required>
+                            <select name="course_fee_id" class="form-select border-primary" required>
                                 <option value="">Choose Course...</option>
-                                <option value="ai-course">Artificial Intelligence (AI)</option>
-                                <option value="web-dev">Web Development</option>
-                                <option value="python">Python Programming</option>
-                                <option value="DIT">DIT</option>
-                                <option value="CIT">CIT</option>
-                                <option value="MS Office">MS Office</option>
-                                <option value="Digital Marketing">Digital Marketing</option>
+                                <?php while ($cf = $courseFees->fetch_assoc()): ?>
+                                    <option value="<?= $cf['id'] ?>"><?= htmlspecialchars($cf['course_name']) ?> (Rs. <?= number_format($cf['total_fee']) ?>)</option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-primary">Assign Teacher (optional)</label>
+                            <select name="assigned_teacher" class="form-select border-success">
+                                <option value="0">No teacher assigned</option>
+                                <?php while ($t = $teacherOptions->fetch_assoc()): ?>
+                                    <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['name']) ?></option>
+                                <?php endwhile; ?>
                             </select>
                         </div>
 

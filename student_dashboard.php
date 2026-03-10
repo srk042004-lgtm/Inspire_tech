@@ -12,6 +12,19 @@ if (!isset($_SESSION['student_id'])) {
 $studentId = $_SESSION['student_id'];
 $name = htmlspecialchars($_SESSION['student_name']);
 $myCourse = isset($_SESSION['enrolled_course']) ? $_SESSION['enrolled_course'] : 'none';
+
+// Fetch assigned teacher (if available)
+$assignedTeacherId = null;
+$assignedTeacherName = null;
+$teacherRes = $conn->query("SELECT assigned_teacher_id FROM students WHERE id = $studentId LIMIT 1");
+if ($teacherRes && $row = $teacherRes->fetch_assoc()) {
+    $assignedTeacherId = $row['assigned_teacher_id'];
+    if ($assignedTeacherId) {
+        $tRow = $conn->query("SELECT name FROM teachers WHERE id = $assignedTeacherId LIMIT 1")->fetch_assoc();
+        $assignedTeacherName = $tRow ? $tRow['name'] : null;
+    }
+}
+
 $academyLogo = "uploads/340827876_5872631156182041_1179006399808807244_n.jpg";
 
 // 3. FETCH DYNAMIC FEE DATA
@@ -213,6 +226,17 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
             <img src="<?php echo $profilePic; ?>" class="sidebar-img" alt="Student">
             <h6 class="text-white mb-0"><?php echo $name; ?></h6>
             <small class="text-info"><?php echo ucfirst(str_replace('-', ' ', $myCourse)); ?></small>
+            <?php if ($assignedTeacherName): ?>
+                <div class="mt-2 small text-secondary">
+                    <i class="fas fa-chalkboard-teacher me-1"></i>
+                    Assigned Teacher: <strong><?php echo htmlspecialchars($assignedTeacherName); ?></strong>
+                </div>
+            <?php else: ?>
+                <div class="mt-2 small text-secondary">
+                    <i class="fas fa-user-clock me-1"></i>
+                    <strong>No teacher assigned</strong>
+                </div>
+            <?php endif; ?>
         </div>
         <a href="#" class="nav-link-custom active"><i class="fas fa-home me-2"></i> Dashboard</a>
         <a href="profile_details.php" class="nav-link-custom"><i class="fas fa-user-graduate me-2"></i> My Profile</a>
