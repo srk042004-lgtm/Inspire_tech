@@ -1,5 +1,5 @@
 <?php
-session_start();
+include 'secure_session.php';
 include 'db_connect.php';
 
 // 1. SECURITY CHECK
@@ -8,20 +8,75 @@ if (!isset($_SESSION['student_id'])) {
     exit();
 }
 
-// 2. DATA ASSIGNMENT
-$studentId = $_SESSION['student_id'];
-$name = htmlspecialchars($_SESSION['student_name']);
-$myCourse = isset($_SESSION['enrolled_course']) ? $_SESSION['enrolled_course'] : 'none';
+// 2. DATA ASSIGNMENT (from DB)
+$studentId = (int)$_SESSION['student_id'];
+$stmt = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+$stmt->bind_param('i', $studentId);
+$stmt->execute();
+$studentData = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$studentData) {
+    // If the student record disappears, force logout.
+    session_destroy();
+    header('Location: student-portal.php');
+    exit();
+}
+
+$name = htmlspecialchars($studentData['name']);
+$myCourse = !empty($studentData['enrolled_course']) ? $studentData['enrolled_course'] : 'none';
+$enrollmentStatus = $studentData['enrollment_status'] ?? 'pending';
+
+// Map human-friendly stored course names to internal course keys used for classroom links
+$courseNameToKey = [
+    'AI' => 'ai',
+    'Web-dev' => 'web-dev',
+    'DIT' => 'dit',
+    'CIT' => 'cit',
+    'MsOffice' => 'msoffice',
+    'Python' => 'python',
+    'Digital Marketing' => 'digital-marketing',
+    'Typing' => 'typing',
+];
+if (isset($courseNameToKey[$myCourse])) {
+    $myCourse = $courseNameToKey[$myCourse];
+}
+
+// Keep session in sync
+$_SESSION['enrolled_course'] = $myCourse;
+$_SESSION['student_name'] = $studentData['name'];
+$_SESSION['enrollment_status'] = $enrollmentStatus;
 
 // Fetch assigned teacher (if available)
-$assignedTeacherId = null;
+$assignedTeacherId = $studentData['assigned_teacher_id'] ?? null;
 $assignedTeacherName = null;
-$teacherRes = $conn->query("SELECT assigned_teacher_id FROM students WHERE id = $studentId LIMIT 1");
-if ($teacherRes && $row = $teacherRes->fetch_assoc()) {
-    $assignedTeacherId = $row['assigned_teacher_id'];
-    if ($assignedTeacherId) {
-        $tRow = $conn->query("SELECT name FROM teachers WHERE id = $assignedTeacherId LIMIT 1")->fetch_assoc();
-        $assignedTeacherName = $tRow ? $tRow['name'] : null;
+if ($assignedTeacherId) {
+    $stmt = $conn->prepare("SELECT name FROM teachers WHERE id = ? LIMIT 1");
+    $stmt->bind_param('i', $assignedTeacherId);
+    $stmt->execute();
+    $tRow = $stmt->get_result()->fetch_assoc();
+    $assignedTeacherName = $tRow ? $tRow['name'] : null;
+    $stmt->close();
+}
+
+// Handle student re-requesting enrollment approval
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['re_request_enrollment'])) {
+    $conn->query("UPDATE students SET enrollment_status='pending', enrollment_requested_at=NOW() WHERE id=$studentId");
+    header('Location: student_dashboard.php?re_request=1');
+    exit;
+}
+
+// Optional: include per-course content if available
+$courseContentDir = __DIR__ . '/course_content';
+$courseIncludes = [
+    'web-dev' => 'web_development.php',
+    'ai-course' => 'artificial_intelligence.php',
+    'ai' => 'artificial_intelligence.php',
+];
+if (isset($courseIncludes[$myCourse])) {
+    $includePath = $courseContentDir . '/' . $courseIncludes[$myCourse];
+    if (file_exists($includePath)) {
+        include $includePath;
     }
 }
 
@@ -44,11 +99,18 @@ $conn->query("CREATE TABLE IF NOT EXISTS certificate_requests (
 // handle request submission
 $certMsg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['req_cert'])) {
-    $existingReq = $conn->query("SELECT status FROM certificate_requests WHERE student_id=$studentId AND (status='pending' OR status='issued')");
+    $stmt = $conn->prepare("SELECT status FROM certificate_requests WHERE student_id = ? AND (status = 'pending' OR status = 'issued')");
+    $stmt->bind_param('i', $studentId);
+    $stmt->execute();
+    $existingReq = $stmt->get_result();
+    $stmt->close();
 
     if ($existingReq->num_rows == 0) {
-        $course = mysqli_real_escape_string($conn, $myCourse);
-        $conn->query("INSERT INTO certificate_requests (student_id, course_name) VALUES ($studentId, '$course')");
+        $stmt = $conn->prepare("INSERT INTO certificate_requests (student_id, course_name) VALUES (?, ?)");
+        $stmt->bind_param('is', $studentId, $myCourse);
+        $stmt->execute();
+        $stmt->close();
+
         header('Location: student_dashboard.php?cert_submitted=1');
         exit;
     }
@@ -75,153 +137,19 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <style>
-        :root {
-            --primary-glow: #00ffd5;
-            --secondary-glow: #00a8ff;
-            --bg-dark: #0f172a;
-            --card-bg: #1e293b;
-        }
+    <link rel="stylesheet" href="style.css">
 
-        body {
-            background: var(--bg-dark);
-            color: #f8fafc;
-            font-family: 'Segoe UI', sans-serif;
-            overflow-x: hidden;
-        }
-
-        .sidebar {
-            height: 100vh;
-            background: #000;
-            padding: 30px 15px;
-            position: fixed;
-            width: 250px;
-            border-right: 1px solid #334155;
-            z-index: 1000;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 40px;
-            min-height: 100vh;
-        }
-
-        .sidebar-profile {
-            text-align: center;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #334155;
-        }
-
-        .sidebar-img {
-            width: 85px;
-            height: 85px;
-            border-radius: 50%;
-            border: 2px solid var(--primary-glow);
-            object-fit: cover;
-            margin-bottom: 10px;
-        }
-
-        .nav-link-custom {
-            color: #94a3b8;
-            padding: 12px 20px;
-            display: block;
-            text-decoration: none;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            transition: 0.3s;
-        }
-
-        .nav-link-custom:hover,
-        .nav-link-custom.active {
-            background: rgba(0, 255, 213, 0.1);
-            color: var(--primary-glow);
-        }
-
-        .id-card-body {
-            background: linear-gradient(135deg, #1e293b 0%, #000 100%);
-            border: 2px solid var(--primary-glow);
-            border-radius: 15px;
-            display: flex;
-            overflow: hidden;
-        }
-
-        .notice-board {
-            background: #1e293b;
-            border-radius: 20px;
-            border-top: 4px solid var(--primary-glow);
-            padding: 25px;
-            height: 100%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .notice-item {
-            border-left: 3px solid var(--secondary-glow);
-            padding-left: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid #334155;
-            text-align: center;
-            transition: 0.3s;
-            height: 100%;
-        }
-
-        .stat-card:hover {
-            border-color: var(--secondary-glow);
-            transform: translateY(-5px);
-        }
-
-        .course-access-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid #334155;
-            border-radius: 20px;
-            padding: 30px;
-            transition: 0.4s;
-        }
-
-        .btn-access {
-            background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
-            color: #000;
-            font-weight: bold;
-            border-radius: 10px;
-            padding: 12px;
-            width: 100%;
-            display: inline-block;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        .btn-glow {
-            background: var(--primary-glow);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-        }
-
-        @media (max-width: 991px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-        }
-    </style>
 </head>
 
-<body>
+<body class="dashboard-page">
+
+    <?php include 'navbar_student.php'; ?>
 
     <div class="sidebar">
+        <?php
+        // Fetch full student profile for display
+        $studentProfile = $conn->query("SELECT email, mobile, district, nic, qualification, last_degree FROM students WHERE id=$studentId LIMIT 1")->fetch_assoc();
+        ?>
         <div class="sidebar-profile">
             <img src="<?php echo $profilePic; ?>" class="sidebar-img" alt="Student">
             <h6 class="text-white mb-0"><?php echo $name; ?></h6>
@@ -235,6 +163,15 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
                 <div class="mt-2 small text-secondary">
                     <i class="fas fa-user-clock me-1"></i>
                     <strong>No teacher assigned</strong>
+                </div>
+            <?php endif; ?>
+            <?php if ($studentProfile): ?>
+                <div class="mt-3 small text-secondary">
+                    <div><i class="fas fa-envelope me-1"></i> <?php echo htmlspecialchars($studentProfile['email']); ?></div>
+                    <div><i class="fas fa-phone me-1"></i> <?php echo htmlspecialchars($studentProfile['mobile']); ?></div>
+                    <?php if (!empty($studentProfile['district'])): ?>
+                        <div><i class="fas fa-map-marker-alt me-1"></i> <?php echo htmlspecialchars($studentProfile['district']); ?></div>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>
@@ -270,12 +207,12 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
                     </div>
                     <div id="studentIDCard">
                         <div class="id-card-body">
-                            <div style="width: 160px; background: rgba(0,0,0,0.3); padding: 20px; text-align: center; border-right: 1px solid #334155;">
-                                <img src="<?php echo $academyLogo; ?>" alt="Logo" style="width: 60px; height: 60px; margin-bottom: 15px; border-radius: 50%; object-fit: cover;">
-                                <img src="<?php echo $profilePic; ?>" alt="Student" style="width: 110px; height: 110px; border-radius: 10px; border: 2px solid var(--primary-glow); object-fit: cover;">
-                                <div class="mt-3" style="letter-spacing: 2px; font-size: 0.7rem; color: var(--primary-glow); font-weight: 900;">STUDENT</div>
+                            <div class="id-card-left">
+                                <img src="<?php echo $academyLogo; ?>" alt="Logo" class="id-card-logo">
+                                <img src="<?php echo $profilePic; ?>" alt="Student" class="id-card-photo">
+                                <div class="id-card-student-label">STUDENT</div>
                             </div>
-                            <div style="padding: 25px; flex-grow: 1;">
+                            <div class="id-card-right">
                                 <div class="mb-1 text-info small fw-bold">INSPIRE TECH ACADEMY</div>
                                 <h4 class="fw-bold mb-0"><?php echo strtoupper($name); ?></h4>
                                 <p class="small text-secondary mb-3">Reg ID: IT-<?php echo 1000 + $studentId; ?></p>
@@ -283,7 +220,7 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
                                     <div class="col-7"><small class="text-secondary d-block">COURSE</small><span class="fw-bold small"><?php echo strtoupper(str_replace('-', ' ', $myCourse)); ?></span></div>
                                     <div class="col-5"><small class="text-secondary d-block">SESSION</small><span class="fw-bold small"><?php echo date('Y'); ?></span></div>
                                 </div>
-                                <div class="border border-info text-center py-1 rounded small" style="color:var(--primary-glow); font-size: 10px;">AUTHORIZED DIGITAL CREDENTIAL</div>
+                                <div class="border border-info text-center py-1 rounded small authorized-badge">AUTHORIZED DIGITAL CREDENTIAL</div>
                             </div>
                         </div>
                     </div>
@@ -299,7 +236,7 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
                                 <div class="notice-item">
                                     <h6 class="mb-1 text-info">Update from Admin</h6>
                                     <p class="small text-secondary mb-0"><?= $n['notice_text'] ?></p>
-                                    <small style="font-size: 0.7rem; color: #64748b;"><?= date('M d, Y', strtotime($n['created_at'])) ?></small>
+                                    <small class="notice-date"><?= date('M d, Y', strtotime($n['created_at'])) ?></small>
                                 </div>
                             <?php endwhile;
                         else: ?>
@@ -338,6 +275,9 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
                 <?php if ($certMsg): ?>
                     <div class="alert alert-info animate__animated animate__pulse"><?= $certMsg ?></div>
                 <?php endif; ?>
+                <?php if (isset($_GET['re_request'])): ?>
+                    <div class="alert alert-success animate__animated animate__pulse">Your request has been resubmitted. Please wait for admin approval.</div>
+                <?php endif; ?>
 
                 <?php if ($certReq && $certReq['status'] === 'pending'): ?>
                     <div class="alert alert-warning border-0 bg-dark text-warning">
@@ -363,17 +303,39 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
             <div class="row">
                 <?php
                 $courses = [
+                    // Course keys from registration (normalized)
                     'ai-course' => ['AI Specialist Masterclass', 'Master Python & Machine Learning', 'Ai_course/1st%20Ai%20intro%20and%20Space%20Search.html', 'border-info'],
+                    'ai' => ['AI Specialist Masterclass', 'Master Python & Machine Learning', 'Ai_course/1st%20Ai%20intro%20and%20Space%20Search.html', 'border-info'],
                     'web-dev' => ['Full Stack Web Development', 'HTML, CSS, JS, PHP & MySQL', 'Web_development/Html%20and%20Css/Class%201%20html.html', 'border-success'],
                     'python' => ['Python for Everybody', 'From Basics to Advanced Automation', 'python/class1.html', 'border-primary'],
                     'msoffice' => ['MS Office Specialist', 'Word, Excel, PPT & Outlook', 'ms_office/word_intro.html', 'border-light'],
+                    'ms-office' => ['MS Office Specialist', 'Word, Excel, PPT & Outlook', 'ms_office/word_intro.html', 'border-light'],
                     'dit' => ['DIT (Diploma in IT)', 'Professional IT Diploma Course', 'diploma/intro.html', 'border-warning'],
                     'cit' => ['CIT (Certificate in IT)', 'Foundations of Information Tech', 'diploma/intro.html', 'border-warning'],
                     'typing' => ['Professional Typing', 'Speed Building & Accuracy', 'typing/practice.html', 'border-secondary'],
                     'digital-marketing' => ['Digital Marketing', 'SEO, SMM & Business Growth', 'marketing/seo_basics.html', 'border-danger']
                 ];
 
-                if (array_key_exists($myCourse, $courses)):
+                if ($enrollmentStatus === 'pending'): ?>
+                    <div class="col-md-8">
+                        <div class="course-access-card text-center">
+                            <i class="fas fa-clock fa-3x mb-3 text-secondary"></i>
+                            <h5>Enrollment Pending Approval</h5>
+                            <p class="text-secondary">Your course request has been sent to the admin. Once approved, your classroom link will appear here.</p>
+                        </div>
+                    </div>
+                <?php elseif ($enrollmentStatus === 'rejected'): ?>
+                    <div class="col-md-8">
+                        <div class="course-access-card text-center">
+                            <i class="fas fa-times-circle fa-3x mb-3 text-danger"></i>
+                            <h5>Enrollment Request Declined</h5>
+                            <p class="text-secondary">Your request was declined. Please contact admin for more details.</p>
+                            <form method="POST" class="mt-3">
+                                <button name="re_request_enrollment" class="btn btn-glow">Re-request Approval</button>
+                            </form>
+                        </div>
+                    </div>
+                <?php elseif ($enrollmentStatus === 'approved' && array_key_exists($myCourse, $courses)):
                     $c = $courses[$myCourse];
                 ?>
                     <div class="col-md-8 animate__animated animate__zoomIn">
@@ -416,6 +378,13 @@ $profilePic = (isset($_SESSION['student_pic']) && !empty($_SESSION['student_pic'
                 link.href = canvas.toDataURL();
                 link.click();
             });
+        });
+
+        // Sidebar toggle for mobile
+        const navbarToggler = document.querySelector('.navbar-toggler');
+        const sidebar = document.querySelector('.sidebar');
+        navbarToggler.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

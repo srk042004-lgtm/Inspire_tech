@@ -1,13 +1,12 @@
 <?php
-// 1. Database connection
+include 'secure_session.php';
 include 'db_connect.php';
 
-// ensure students table has all fields we need for registration
+// 1. Ensure Table Structure is correct
 $conn->query("ALTER TABLE students 
     ADD COLUMN IF NOT EXISTS fname VARCHAR(255) DEFAULT '',
     ADD COLUMN IF NOT EXISTS dob DATE DEFAULT NULL,
     ADD COLUMN IF NOT EXISTS district VARCHAR(255) DEFAULT '',
-    ADD COLUMN IF NOT EXISTS email VARCHAR(255) DEFAULT '',
     ADD COLUMN IF NOT EXISTS nic VARCHAR(50) DEFAULT '',
     ADD COLUMN IF NOT EXISTS qualification VARCHAR(255) DEFAULT '',
     ADD COLUMN IF NOT EXISTS last_degree VARCHAR(100) DEFAULT '',
@@ -16,380 +15,238 @@ $conn->query("ALTER TABLE students
     ADD COLUMN IF NOT EXISTS password VARCHAR(255) DEFAULT '',
     ADD COLUMN IF NOT EXISTS picture VARCHAR(255) DEFAULT '',
     ADD COLUMN IF NOT EXISTS enrolled_course VARCHAR(255) DEFAULT '',
-    ADD COLUMN IF NOT EXISTS course_fee_id INT DEFAULT NULL,
-    ADD COLUMN IF NOT EXISTS assigned_teacher_id INT DEFAULT NULL");
+    ADD COLUMN IF NOT EXISTS enrollment_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    ADD COLUMN IF NOT EXISTS enrollment_requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS total_fee DECIMAL(10,2) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS paid_fee DECIMAL(10,2) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS course_fee_id INT DEFAULT NULL");
 
-// Ensure course fee table exists for registration/course selection
-$conn->query("CREATE TABLE IF NOT EXISTS course_fees (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    course_name VARCHAR(255) UNIQUE,
-    total_fee DECIMAL(10,2) DEFAULT 0
-)");
-
-// Seed default course list if missing
+// 2. Ensure Course Fees table exists and has data
+$conn->query("CREATE TABLE IF NOT EXISTS course_fees (id INT AUTO_INCREMENT PRIMARY KEY, course_name VARCHAR(255) UNIQUE, total_fee DECIMAL(10,2) DEFAULT 0)");
 $seedCheck = $conn->query("SELECT COUNT(*) as cnt FROM course_fees")->fetch_assoc();
-if ($seedCheck && $seedCheck['cnt'] == 0) {
-    $courses = [
-        ['DIT', 15000],
-        ['CIT', 18000],
-        ['MsOffice', 12000],
-        ['Web-dev', 25000],
-        ['Python', 22000],
-        ['AI', 28000]
-    ];
-    foreach ($courses as $c) {
-        $course = $conn->real_escape_string($c[0]);
-        $fee = (float)$c[1];
-        $conn->query("INSERT INTO course_fees (course_name, total_fee) VALUES ('$course', $fee)");
-    }
+if ($seedCheck['cnt'] == 0) {
+  $conn->query("INSERT INTO course_fees (course_name, total_fee) VALUES ('DIT', 15000), ('CIT', 18000), ('Web-dev', 25000), ('AI', 28000)");
 }
 
 $courseFees = $conn->query("SELECT id, course_name, total_fee FROM course_fees ORDER BY course_name");
-
 $message = "";
 
-// Provide teacher list for optional assignment
-$teacherOptions = $conn->query("SELECT id, name FROM teachers WHERE status='active' ORDER BY name");
+// 3. Form Submission Logic
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
+  $name = trim($_POST['name'] ?? '');
+  $email = trim($_POST['email'] ?? '');
+  $courseFeeId = isset($_POST['course_fee_id']) ? (int)$_POST['course_fee_id'] : 0;
+  $password = $_POST['password'] ?? '';
 
-// 2. PHP Logic to handle the form submission
-if (isset($_POST['register'])) {
-    // Collecting data from the form (use null coalescing to avoid undefined index warnings)
-    $name = mysqli_real_escape_string($conn, $_POST['name'] ?? '');
-    $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
-    $dob = $_POST['dob'] ?? null;
-    $district = mysqli_real_escape_string($conn, $_POST['district'] ?? '');
-    $email = mysqli_real_escape_string($conn, $_POST['email'] ?? '');
-    $nic = mysqli_real_escape_string($conn, $_POST['nic'] ?? '');
-    $qualification = mysqli_real_escape_string($conn, $_POST['qualification'] ?? '');
-    $last_degree = $_POST['last_degree'] ?? '';
-    $mobile = $_POST['mobile'] ?? '';
-    $fmobile = $_POST['fmobile'] ?? '';
-    $courseFeeId = isset($_POST['course_fee_id']) ? (int)$_POST['course_fee_id'] : 0;
-    $enrolled_course = '';
-    $total_fee = 0;
+  if (empty($name) || empty($email) || $courseFeeId <= 0 || empty($password)) {
+    $message = "<div class='alert alert-danger'>Please fill in all required fields.</div>";
+  } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $message = "<div class='alert alert-danger'>Please enter a valid email address.</div>";
+  } else {
+    // Prevent duplicate registrations
+    $stmt = $conn->prepare("SELECT id FROM students WHERE email = ?");
+    $stmt->bind_param('s', $email);
+    $stmt->execute();
+    $stmt->store_result();
 
-    if ($courseFeeId) {
-        $courseRow = $conn->query("SELECT course_name, total_fee FROM course_fees WHERE id = $courseFeeId")->fetch_assoc();
-        if ($courseRow) {
-            $enrolled_course = $conn->real_escape_string($courseRow['course_name']);
-            $total_fee = (float)$courseRow['total_fee'];
-        }
-    }
-
-    // Hash password for security
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-
-    // Handle Image Upload
-    $target_dir = "uploads/";
-    if (!is_dir($target_dir)) { mkdir($target_dir, 0777, true); }
-    
-    $pic_name = time() . "_" . basename($_FILES["pic"]["name"]);
-    $target_file = $target_dir . $pic_name;
-
-    // Determine assigned teacher (if selected)
-    $assignedTeacher = isset($_POST['assigned_teacher']) ? (int)$_POST['assigned_teacher'] : 0;
-
-    if (move_uploaded_file($_FILES["pic"]["tmp_name"], $target_file)) {
-        // Insert into Database
-        $sql = "INSERT INTO students (name, fname, dob, district, email, nic, qualification, last_degree, mobile, fmobile, password, picture, enrolled_course, course_fee_id, total_fee, paid_fee, assigned_teacher_id) 
-                VALUES ('$name', '$fname', '$dob', '$district', '$email', '$nic', '$qualification', '$last_degree', '$mobile', '$fmobile', '$password', '$pic_name', '$enrolled_course', $courseFeeId, $total_fee, 0, " . ($assignedTeacher ? $assignedTeacher : 'NULL') . ")";
-        if (mysqli_query($conn, $sql)) {
-            echo "<script>alert('Registration Successful! Please Login.'); window.location.href='student-portal.php';</script>";
-        } else {
-            $message = "<div class='alert alert-danger'>Error: " . mysqli_error($conn) . "</div>";
-        }
+    if ($stmt->num_rows > 0) {
+      $message = "<div class='alert alert-danger'>Email already registered!</div>";
+      $stmt->close();
     } else {
-        $message = "<div class='alert alert-danger'>Failed to upload picture. Make sure 'uploads' folder exists.</div>";
+      $stmt->close();
+
+      // Get course fee details
+      $stmt = $conn->prepare("SELECT course_name, total_fee FROM course_fees WHERE id = ?");
+      $stmt->bind_param('i', $courseFeeId);
+      $stmt->execute();
+      $result = $stmt->get_result();
+      $courseRow = $result->fetch_assoc();
+      $stmt->close();
+
+      if (!$courseRow) {
+        $message = "<div class='alert alert-danger'>Invalid course selection.</div>";
+      } else {
+        $courseName = $courseRow['course_name'];
+        $total_fee = $courseRow['total_fee'];
+
+        // Map human-friendly course names to internal course keys used in the dashboard
+        $courseKeyMap = [
+          'AI' => 'ai',
+          'Web-dev' => 'web-dev',
+          'DIT' => 'dit',
+          'CIT' => 'cit',
+          'MsOffice' => 'msoffice',
+          'Python' => 'python',
+          'Digital Marketing' => 'digital-marketing',
+          'Typing' => 'typing',
+        ];
+        $courseKey = $courseKeyMap[$courseName] ?? strtolower(str_replace(' ', '-', $courseName));
+
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+        // Handle file upload (image only, max 2MB)
+        $uploadOk = true;
+        $pic_name = '';
+        if (!empty($_FILES['pic']['name'])) {
+          $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+          $fileSize = $_FILES['pic']['size'];
+
+          $finfo = finfo_open(FILEINFO_MIME_TYPE);
+          $fileType = $finfo ? finfo_file($finfo, $_FILES['pic']['tmp_name']) : ($_FILES['pic']['type'] ?? '');
+          if ($finfo) {
+            finfo_close($finfo);
+          }
+
+          if (!in_array($fileType, $allowedTypes) || $fileSize > 2 * 1024 * 1024) {
+            $uploadOk = false;
+            $message = "<div class='alert alert-danger'>Invalid profile picture. Only JPG/PNG files under 2MB are allowed.</div>";
+          } else {
+            if (!is_dir('uploads')) {
+              mkdir('uploads', 0755, true);
+            }
+
+            $extension = pathinfo($_FILES['pic']['name'], PATHINFO_EXTENSION);
+            $pic_name = hash('sha256', uniqid('', true)) . '.' . $extension;
+            if (!move_uploaded_file($_FILES['pic']['tmp_name'], 'uploads/' . $pic_name)) {
+              $uploadOk = false;
+              $message = "<div class='alert alert-danger'>Unable to upload profile picture. Please try again.</div>";
+            }
+          }
+        }
+
+        if ($uploadOk) {
+          $stmt = $conn->prepare("INSERT INTO students (name, fname, dob, district, email, nic, last_degree, mobile, fmobile, password, picture, enrolled_course, enrollment_status, enrollment_requested_at, course_fee_id, total_fee, paid_fee) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), ?, ?, 0)");
+          $stmt->bind_param('ssssssssssssii', $name, $_POST['fname'], $_POST['dob'], $_POST['district'], $email, $_POST['nic'], $_POST['last_degree'], $_POST['mobile'], $_POST['fmobile'], $passwordHash, $pic_name, $courseKey, $courseFeeId, $total_fee);
+
+          if ($stmt->execute()) {
+            $message = "<div class='alert alert-success'>Registration successful! Your enrollment request has been sent to the admin. <a href='student-portal.php' class='fw-bold text-dark'>Login here</a></div>";
+          } else {
+            $message = "<div class='alert alert-danger'>Error: " . htmlspecialchars($stmt->error) . "</div>";
+          }
+          $stmt->close();
+        }
+      }
     }
+  }
 }
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <base href="http://localhost/Inspire_tech/Ai-full-project/">
-    <title>Student Registration - Inspire Tech</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <style>
-      body {
-        font-family: "Segoe UI", sans-serif;
-        background: #0f172a;
-        color: white;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .navbar {
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid #1e293b;
-      }
-
-      .card {
-        background: #1e293b;
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        border: 1px solid #334155;
-        margin-top: 50px;
-      }
-
-      .btn-premium {
-        background: linear-gradient(45deg, #00ffd5, #00a8ff);
-        border: none;
-        font-weight: bold;
-        color: #0f172a;
-        padding: 12px;
-        transition: 0.3s;
-      }
-
-      .btn-premium:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(0, 255, 213, 0.3);
-        color: #0f172a;
-      }
-
-      .form-control {
-        background: #0f172a;
-        border: 1px solid #334155;
-        color: white;
-        padding: 12px;
-      }
-      /* ensure placeholder text is visible */
-      .form-control::placeholder {
-        color: #a1a1aa;
-      }
-
-      .form-control:focus {
-        background: #1e293b;
-        color: white;
-        border-color: #00ffd5;
-        box-shadow: 0 0 0 0.25rem rgba(0, 255, 213, 0.1);
-      }
-
-      .footer {
-        background: #000;
-        padding: 30px;
-        margin-top: auto;
-        color: #64748b;
-      }
-
-      .academy-logo {
-        font-size: 1.5rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        background: linear-gradient(45deg, #00ffd5, #00a8ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .input-group-text {
-        cursor: pointer;
-      }
-
-      /* light theme overrides */
-      .light-theme body {
-        background: #f8fafc;
-        color: #0f172a;
-      }
-      .light-theme .navbar {
-        background: rgba(255, 255, 255, 0.8);
-        border-bottom: 1px solid #cbd5e1;
-      }
-      .light-theme .navbar .text-secondary {
-        color: #0f172a !important;
-      }
-      .light-theme .card {
-        background: #ffffff;
-        color: #0f172a;
-        border: 1px solid #cbd5e1;
-      }
-      .light-theme .form-control {
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #0f172a;
-      }
-      .light-theme .form-control:focus {
-        background: #ffffff;
-        color: #0f172a;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.1);
-      }
-      .light-theme .btn-premium {
-        color: #0f172a;
-      }
-      .light-theme .footer {
-        background: #f1f5f9;
-        color: #64748b;
-      }
-    </style>
+  <meta charset="UTF-8">
+  <title>Student Registration | Inspire Tech</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
 
-<nav class="navbar navbar-expand-lg">
-    <div class="container">
-        <a class="navbar-brand academy-logo" href="home_page.php">INSPIRE TECH SCHOOL OF IT</a>
-        <div class="ms-auto d-flex align-items-center gap-3">
-          <button id="themeBtn" class="btn btn-sm btn-outline-light" title="Toggle light/dark">
-            <i class="fas fa-sun"></i>
-          </button>
-          <a href="home_page.php" class="text-secondary text-decoration-none small"><i class="fas fa-arrow-left me-1"></i> Back to Home</a>
-        </div>
-    </div>
-</nav>
+<body class="registration-page">
 
-<div class="container mb-5">
+  <?php include 'navbar_auth.php'; ?>
+
+  <div class="container mb-5">
     <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card animate__animated animate__zoomIn">
-                <h3 class="text-center mb-4 fw-bold text-primary">Student Registration Form</h3>
-                
-                <?php echo $message; ?>
+      <div class="col-md-10">
+        <div class="card p-4 animate__animated animate__fadeInUp">
+          <h3 class="text-center mb-4">Student Registration Form</h3>
+          <?php echo $message; ?>
 
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Student Full Name</label>
-                            <input type="text" name="name" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Father Name</label>
-                            <input type="text" name="fname" class="form-control" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label small fw-bold">Date of Birth</label>
-                            <input type="date" name="dob" class="form-control" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label small fw-bold">District</label>
-                            <input type="text" name="district" class="form-control" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label small fw-bold">CNIC / B-Form</label>
-                            <input type="text" name="nic" class="form-control" placeholder="XXXXX-XXXXXXX-X" required>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Email Address</label>
-                            <input type="email" name="email" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Mobile Number</label>
-                            <input type="text" name="mobile" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Last Completed Degree</label>
-                            <select name="last_degree" class="form-control" required>
-                                <option value="">Select Degree</option>
-                                <option>Matric</option>
-                                <option>Intermediate</option>
-                                <option>Bachelor</option>
-                                <option>Master</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-primary">Course to Enroll</label>
-                            <select name="course_fee_id" class="form-select border-primary" required>
-                                <option value="">Choose Course...</option>
-                                <?php while ($cf = $courseFees->fetch_assoc()): ?>
-                                    <option value="<?= $cf['id'] ?>"><?= htmlspecialchars($cf['course_name']) ?> (Rs. <?= number_format($cf['total_fee']) ?>)</option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-primary">Assign Teacher (optional)</label>
-                            <select name="assigned_teacher" class="form-select border-success">
-                                <option value="0">No teacher assigned</option>
-                                <?php while ($t = $teacherOptions->fetch_assoc()): ?>
-                                    <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['name']) ?></option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Create Password</label>
-                            <div class="input-group">
-                              <input type="password" name="password" id="regPwd" class="form-control" required>
-                              <span class="input-group-text bg-dark border-secondary text-secondary" onclick="togglePass('regPwd', this)">
-                                <i class="fas fa-eye"></i>
-                              </span>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Upload Profile Picture</label>
-                            <input type="file" name="pic" class="form-control" accept="image/*" required>
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-4">
-                        <button type="submit" name="register" class="btn btn-premium px-5 py-2">Register Student Account</button>
-                        <br>
-                        <a href="student-portal.php" class="d-block mt-3 text-decoration-none fw-bold">
-                            Already Registered? Click here to Sign In
-                        </a>
-                    </div>
-                </form>
+          <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="small fw-bold">Full Name</label>
+                <input type="text" name="name" class="form-control" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="small fw-bold">Father Name</label>
+                <input type="text" name="fname" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="small fw-bold">Date of Birth</label>
+                <input type="date" name="dob" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="small fw-bold">District</label>
+                <input type="text" name="district" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="small fw-bold">CNIC / B-Form</label>
+                <input type="text" name="nic" class="form-control" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="small fw-bold">Email Address</label>
+                <input type="email" name="email" class="form-control" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="small fw-bold">Mobile Number</label>
+                <input type="text" name="mobile" class="form-control" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="small fw-bold">Father's Mobile</label>
+                <input type="text" name="fmobile" class="form-control">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="small fw-bold">Last Degree</label>
+                <select name="last_degree" class="form-select" required>
+                  <option value="Matric">Matric</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Bachelor">Bachelor</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="small fw-bold text-info">Course to Enroll</label>
+                <select name="course_fee_id" class="form-select border-info" required>
+                  <option value="">Select Course...</option>
+                  <?php while ($cf = $courseFees->fetch_assoc()): ?>
+                    <option value="<?= $cf['id'] ?>"><?= $cf['course_name'] ?> (Rs. <?= number_format($cf['total_fee']) ?>)</option>
+                  <?php endwhile; ?>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="small fw-bold">Profile Picture</label>
+                <input type="file" name="pic" class="form-control" accept="image/*" required>
+              </div>
+              <div class="col-md-12 mb-3">
+                <label class="small fw-bold">Password</label>
+                <div class="input-group">
+                  <input type="password" name="password" id="regPass" class="form-control" required>
+                  <span class="input-group-text bg-dark text-white border-secondary" onclick="togglePass()">
+                    <i class="fas fa-eye" id="eyeIcon"></i>
+                  </span>
+                </div>
+              </div>
             </div>
-        </div>
-    </div>
-</div>
 
-<div class="footer">
-    Inspire Tech Computer Academy<br>
-    Nowshera Cantt | Owner: Raheel Ahmad | 03462345453
-</div>
-<footer style="text-align: center; padding: 20px;">
-    <p>&copy; 2026 Inspire Tech Academy</p>
-    <a href="admin_dashboard.php" style="color: transparent; text-decoration: none; font-size: 1px;">.</a>
-</footer>
+            <button type="submit" name="register" class="btn btn-premium w-100 mt-3">REGISTER ACCOUNT</button>
+            <div class="text-center mt-3">
+              <a href="student-portal.php" class="text-decoration-none">Already have an account? <strong>Sign In</strong></a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
-    // server check
-    if (window.location.protocol === 'file:') {
-      alert('Please open this page via the web server.');
-      window.location.href = 'student-registration.php';
-    }
-
-    function togglePass(id, el) {
-      const input = document.getElementById(id);
-      const icon = el.querySelector('i');
-      if (input.type === "password") {
-        input.type = "text";
-        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    function togglePass() {
+      const p = document.getElementById('regPass');
+      const i = document.getElementById('eyeIcon');
+      if (p.type === "password") {
+        p.type = "text";
+        i.classList.replace('fa-eye', 'fa-eye-slash');
       } else {
-        input.type = "password";
-        icon.classList.replace('fa-eye-slash', 'fa-eye');
+        p.type = "password";
+        i.classList.replace('fa-eye-slash', 'fa-eye');
       }
     }
 
-    // theme toggler
-    const themeBtn = document.getElementById('themeBtn');
-    function applyTheme(theme) {
-      document.documentElement.classList.toggle('light-theme', theme === 'light');
-      if (themeBtn) {
-        themeBtn.innerHTML = theme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-      }
-    }
-    function toggleTheme() {
-      const current = localStorage.getItem('theme') || 'dark';
-      const next = current === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('theme', next);
-      applyTheme(next);
-    }
-    if (themeBtn) {
-      themeBtn.addEventListener('click', toggleTheme);
-      const saved = localStorage.getItem('theme') || 'dark';
-      applyTheme(saved);
-    }
+
   </script>
 
-  <script src="support-hub.js"></script>
 </body>
+
 </html>

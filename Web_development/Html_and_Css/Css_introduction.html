@@ -10,61 +10,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css" />
-
-    <style>
-      .list-group-item.hidden {
-        display: none;
-      }
-
-      .sidebar-backdrop {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1040;
-      }
-
-      .sidebar-open .sidebar-backdrop {
-        display: block;
-      }
-
-      #sidebar {
-        transition: transform 0.3s ease-in-out;
-      }
-
-      @media (max-width: 992px) {
-        #sidebar {
-          transform: translateX(-100%);
-          position: fixed;
-          z-index: 1050;
-          width: 260px;
-          height: 100vh;
-        }
-        #sidebar.open {
-          transform: translateX(0);
-        }
-      }
-
-      /* Clean section boxes */
-      .section-box {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 25px;
-        border-left: 4px solid #0d6efd;
-      }
-
-      .code-box {
-        background: #f7f7f7;
-        padding: 15px;
-        border-radius: 6px;
-        border: 1px solid #ddd;
-        display: block;
-        white-space: pre-wrap;
-      }
-    </style>
-  </head>
+    <link rel="stylesheet" href="style.css" /></head>
 
   <body>
     <!-- Navbar -->
@@ -344,3 +290,4 @@ selector {
 
   </body>
 </html>
+

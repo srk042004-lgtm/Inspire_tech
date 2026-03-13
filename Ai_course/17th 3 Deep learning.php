@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Class 17 - Deep Model Optimization | Inspire Tech Academy</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />    <link rel="stylesheet" href="../style.css" /></head>
+  <body class="ai-course-page ai-course-page">
+    <?php include 'navbar.php'; ?>
+
+    <div class="container">
+    <div class="row">
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sidebar">
+                <h5>Ai_course Map</h5>
+                <a href="16th deep Leaning 2 .php" class="class-item"><i class="fas fa-lock"></i> 16. Deep Learning of AI 2</a>
+                <a href="17th 3 Deep learning.php" class="class-item active"><i class="fas fa-play-circle"></i> 17. Deep Learning of AI 3</a>
+                <a href="18th Computer vision 1 .php" class="class-item"><i class="fas fa-lock"></i> 18. Computer Vision of AI 1</a>
+               
+                
+
+
+            </div>
+        </div>
+
+
+
+        <div class="col-lg-9">
+          <div class="content-card animate__animated animate__fadeIn">
+            <div class="eng-badge">
+              <i class="fas fa-microchip me-2"></i> Computational Optimization
+            </div>
+            <h2 class="topic-header">Class 48: Advanced Deep Model Training</h2>
+            <p>
+              Training a deep model requires far more precision than standard
+              machine learning because of the sheer number of parameters
+              involved. In this class, we move beyond basic fitting to discuss
+              <strong>Weight Initialization</strong> techniques like Xavier and
+              He, which prevent gradients from exploding or vanishing during the
+              first few epochs. We dive deep into
+              <strong>Optimizers</strong> such as RMSProp and Adam, explaining
+              how they use "Momentum" to accelerate training in the right
+              direction. You will learn to monitor
+              <strong>Loss Curves</strong> in real-time to identify
+              "Overfitting" (where the model memorizes training data) versus
+              "Underfitting" (where the model fails to learn the patterns). We
+              also introduce <strong>Learning Rate Schedulers</strong> that
+              automatically slow down the learning process as the model
+              approaches the global minimum. At Inspire Tech, we emphasize the
+              importance of <strong>GPU Acceleration</strong> and parallel
+              computing, as deep models often require billions of calculations
+              per second to converge effectively.
+            </p>
+
+            <div class="video-box">
+              <iframe
+                src="https://www.youtube.com/embed/aircAruvnKk"
+                frameborder="0"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="eng-badge">
+              <i class="fas fa-vial me-2"></i> Quality Assurance
+            </div>
+            <h2 class="topic-header">
+              Class 49: Rigorous Model Testing & Validation
+            </h2>
+            <p>
+              Testing a deep model goes beyond looking at a single accuracy
+              score; it requires a multidimensional analysis of how the model
+              generalizes to the real world. In this class, we explore
+              <strong>K-Fold Cross-Validation</strong> for deep learning and the
+              use of a dedicated "Hold-out" test set. You will learn how to
+              generate <strong>Saliency Maps</strong>, which visualize exactly
+              which pixels an image classifier is looking at to make its
+              decision—ensuring it isn't making right guesses for the wrong
+              reasons. We cover <strong>Inference Latency</strong>, teaching you
+              how to measure how many milliseconds your model takes to process a
+              single request, which is critical for real-time applications like
+              self-driving. At our Nowshera academy, we also discuss
+              <strong>Robustness Testing</strong>, where we intentionally add
+              noise or adversarial perturbations to the input to see if the
+              model's logic breaks. Mastering this phase ensures that your AI
+              isn't just a lab experiment, but a reliable tool ready for
+              professional deployment.
+            </p>
+
+            <div class="video-box">
+              <iframe
+                src="https://www.youtube.com/embed/HBi-P5j0Kec"
+                frameborder="0"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="eng-badge">
+              <i class="fas fa-rocket me-2"></i> Capstone Project
+            </div>
+            <h2 class="topic-header">
+              Class 50: Project - Medical Image Diagnostic System
+            </h2>
+            <p>
+              For your 50th class milestone, you will build a comprehensive
+              **Medical Image Diagnostic System** using a Deep Convolutional
+              Neural Network. This project involves the entire lifecycle: from
+              pre-processing raw X-ray or MRI data to handling class imbalances
+              in rare diseases. You will implement
+              <strong>Transfer Learning</strong> by taking a pre-trained model
+              like ResNet or Inception and fine-tuning it for medical tasks,
+              significantly reducing training time and increasing accuracy.
+              You'll use <strong>Global Average Pooling</strong> and custom
+              output layers to classify conditions with high precision. The
+              project also requires you to build a small dashboard using
+              <strong>Streamlit</strong>, allowing a user to upload an image and
+              receive a probability score from your AI. This project serves as
+              the crown jewel of your portfolio, demonstrating that you can use
+              cutting-edge Deep Learning to solve life-critical problems with
+              technical maturity and ethical consideration.
+            </p>
+
+            <div class="video-box">
+              <iframe
+                src="https://www.youtube.com/embed/u_I8S-9asF0"
+                frameborder="0"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <div id="quiz-box">
+            <h3 class="text-info mb-4">
+              <i class="fas fa-medal me-2"></i> Model Engineer Certification
+              Quiz
+            </h3>
+            <div class="quiz-progress"><div id="progress-bar"></div></div>
+
+            <div id="quiz-content">
+              <h5 id="question-text">
+                Q1: Which optimizer is most famous for using 'Momentum' and
+                adaptive learning rates simultaneously?
+              </h5>
+              <div id="options-container" class="mt-3">
+                <div class="quiz-option" onclick="checkAnswer(false)">
+                  Stochastic Gradient Descent
+                </div>
+                <div class="quiz-option" onclick="checkAnswer(true)">
+                  Adam Optimizer
+                </div>
+                <div class="quiz-option" onclick="checkAnswer(false)">
+                  Mean Squared Error
+                </div>
+              </div>
+            </div>
+            <div id="feedback" class="mt-3 fw-bold"></div>
+          </div>
+
+          <div
+            id="nav-container"
+            class="d-flex justify-content-between mt-5 mb-5 d-none"
+          >
+            <button
+              class="btn btn-secondary btn-lg rounded-pill px-4"
+              onclick="history.back()"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Vision & NLP
+            </button>
+            <button class="btn btn-success btn-lg rounded-pill px-5 shadow">
+              Final Module: MLOps & Career
+              <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="container text-center text-md-start">
+        <div class="row">
+          <div class="col-md-6 mb-4">
+            <div class="fw-bold text-info fs-4 mb-2">Inspire Tech Academy</div>
+            <p>
+              Engineering intelligence at scale. We don't just teach you how to
+              code; we teach you how to build the future of AI in Pakistan.
+            </p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p>Location: Khattak Building, Nowshera Cantt</p>
+            <p>Instructor: Raheel Ahmad | 03462345453</p>
+          </div>
+        </div>
+        <hr class="bg-secondary" />
+        <center class="small opacity-50">
+          © 2026 Inspire Tech. All Rights Reserved.
+        </center>
+      </div>
+    </footer>
+
+    <script src="/support hub.js">
+      let currentQuestion = 1;
+      const questions = [
+        {
+          q: "Which optimizer is most famous for using 'Momentum' and adaptive learning rates simultaneously?",
+          options: [
+            "Stochastic Gradient Descent",
+            "Adam Optimizer",
+            "Mean Squared Error",
+          ],
+          correct: 1,
+        },
+        {
+          q: "What is the primary purpose of 'Early Stopping' during model training?",
+          options: [
+            "To prevent overfitting",
+            "To make the model faster",
+            "To increase memory usage",
+          ],
+          correct: 0,
+        },
+        {
+          q: "What technique involves taking a model trained on a large dataset and adapting it to a smaller, specific task?",
+          options: ["Feature Scaling", "One-Hot Encoding", "Transfer Learning"],
+          correct: 2,
+        },
+      ];
+
+      function checkAnswer(isCorrect) {
+        const feedback = document.getElementById("feedback");
+        const bar = document.getElementById("progress-bar");
+
+        if (isCorrect) {
+          feedback.innerHTML =
+            "<span class='text-success animate__animated animate__flash'>✔️ Knowledge Verified. Advancing...</span>";
+          let progress = (currentQuestion / 3) * 100;
+          bar.style.width = progress + "%";
+
+          setTimeout(() => {
+            currentQuestion++;
+            if (currentQuestion <= 3) {
+              loadQuestion();
+              feedback.innerText = "";
+            } else {
+              feedback.innerHTML =
+                "<span class='text-info animate__animated animate__tada'>🎓 Congratulations! You are now a Deep Learning Specialist.</span>";
+              document
+                .getElementById("nav-container")
+                .classList.remove("d-none");
+            }
+          }, 1200);
+        } else {
+          feedback.innerHTML =
+            "<span class='text-danger animate__animated animate__shakeX'>❌ Incorrect. Review the training details and try again!</span>";
+          setTimeout(() => {
+            currentQuestion = 1;
+            bar.style.width = "0%";
+            loadQuestion();
+            feedback.innerText = "";
+          }, 2000);
+        }
+      }
+
+      function loadQuestion() {
+        const qData = questions[currentQuestion - 1];
+        document.getElementById("question-text").innerText =
+          `Q${currentQuestion}: ${qData.q}`;
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = "";
+
+        qData.options.forEach((opt, index) => {
+          const div = document.createElement("div");
+          div.className = "quiz-option";
+          div.innerText = opt;
+          div.onclick = () => checkAnswer(index === qData.correct);
+          optionsContainer.appendChild(div);
+        });
+      }
+
+      loadQuestion();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
+
+
+
+
+

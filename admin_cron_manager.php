@@ -22,7 +22,7 @@ if (isset($_POST['run_sync'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -35,15 +35,7 @@ if (isset($_POST['run_sync'])) {
 
 <body>
 
-    <nav class="navbar border-bottom py-3">
-        <div class="container">
-            <span class="navbar-brand fw-bold"><i class="fas fa-robot me-2"></i>Inspire Task Runner</span>
-            <div class="d-flex align-items-center">
-                <i class="fas fa-moon theme-switch me-3" id="themeBtn"></i>
-                <a href="admin_dashboard.php" class="btn btn-sm btn-outline-secondary">Exit</a>
-            </div>
-        </div>
-    </nav>
+    <?php include 'navbar_admin.php'; ?>
 
     <div class="container py-5">
         <div class="row g-4">
@@ -123,23 +115,11 @@ if (isset($_POST['run_sync'])) {
     </div>
 
     <script>
-        // Theme Toggle Logic
-        const themeBtn = document.getElementById('themeBtn');
-        const html = document.documentElement;
-
-        themeBtn.addEventListener('click', () => {
-            if (html.getAttribute('data-theme') === 'light') {
-                html.setAttribute('data-theme', 'dark');
-                themeBtn.classList.replace('fa-moon', 'fa-sun');
-            } else {
-                html.setAttribute('data-theme', 'light');
-                themeBtn.classList.replace('fa-sun', 'fa-moon');
-            }
-        });
-
-        // Auto-scroll logs to bottom
+        // Auto-scroll logs to bottom (if present)
         const logBox = document.getElementById('logBox');
-        logBox.scrollTop = logBox.scrollHeight;
+        if (logBox) {
+            logBox.scrollTop = logBox.scrollHeight;
+        }
     </script>
 
 </body>

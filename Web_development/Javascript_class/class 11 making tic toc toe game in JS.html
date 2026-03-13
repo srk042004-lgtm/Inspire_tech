@@ -9,88 +9,6 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
-    <style>
-      /* General Layout and Styling */
-      .list-group-item.hidden {
-        display: none;
-      }
-      .course-list a.active-link {
-        font-weight: bold;
-        color: #0d6efd;
-      }
-      .main-content {
-        padding-top: 20px;
-      }
-      .code-example {
-        background-color: #272822;
-        color: #f8f8f2;
-        padding: 15px;
-        border-radius: 5px;
-        overflow-x: auto;
-        font-family: monospace;
-        white-space: pre-wrap;
-        margin-bottom: 20px;
-      }
-
-      /* Tic-Tac-Toe Specific Styles */
-      .game-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: 20px;
-      }
-
-      #game-board {
-        display: grid;
-        grid-template-columns: repeat(3, 100px);
-        grid-template-rows: repeat(3, 100px);
-        gap: 0;
-        border: 3px solid #343a40; /* Dark border */
-        margin-bottom: 20px;
-      }
-
-      .cell {
-        width: 100px;
-        height: 100px;
-        border: 1px solid #6c757d; /* Light grey dividers */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 4rem; /* Large text for X/O */
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.1s;
-        user-select: none;
-      }
-      .cell:hover:not(.X):not(.O) {
-        background-color: #f8f9fa; /* Slight hover effect */
-      }
-      .cell.X {
-        color: #dc3545; /* Red for X */
-      }
-      .cell.O {
-        color: #007bff; /* Blue for O */
-      }
-
-      #status {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 15px;
-      }
-
-      /* Overriding default borders for better game look */
-      .cell:nth-child(3n + 1),
-      .cell:nth-child(3n + 2) {
-        border-right: 3px solid #343a40;
-      }
-      .cell:nth-child(n + 1):nth-child(-n + 6) {
-        border-bottom: 3px solid #343a40;
-      }
-      /* Remove outer thin borders, rely on the thick grid */
-      .cell {
-        border: none;
-      }
-    </style>
   </head>
 
   <body>
@@ -675,3 +593,4 @@
     <script src="app.js"></script>
   </body>
 </html>
+

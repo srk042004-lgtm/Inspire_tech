@@ -1,5 +1,5 @@
 <?php
-session_start();
+include 'secure_session.php';
 include 'db_connect.php';
 
 // --- DATABASE TABLES SETUP ---
@@ -9,6 +9,17 @@ $conn->query("CREATE TABLE IF NOT EXISTS certificate_requests (
     student_id INT,
     course_name VARCHAR(255),
     status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// Logs sent enrollment approval/rejection notifications
+$conn->query("CREATE TABLE IF NOT EXISTS enrollment_notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    action VARCHAR(50),
+    email VARCHAR(255),
+    subject VARCHAR(255),
+    body TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
@@ -117,33 +128,54 @@ if (isset($_GET['msg'])) {
 // --- LOGIC: CONTACT INQUIRIES ---
 if (isset($_GET['delete_msg'])) {
     $id = (int)$_GET['delete_msg'];
-    $conn->query("DELETE FROM contact_inquiries WHERE id=$id");
+    $stmt = $conn->prepare("DELETE FROM contact_inquiries WHERE id = ?");
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $stmt->close();
     $msg = "Inquiry deleted successfully!";
 }  // marking read not available for inquiries, they are always shown
 
 
 // --- LOGIC: HIRE TEACHER ---
 if(isset($_POST['hire_teacher'])) {
-    $name = mysqli_real_escape_string($conn, $_POST['t_name']);
-    $email = mysqli_real_escape_string($conn, $_POST['t_email']);
-    $pass = password_hash($_POST['t_pass'], PASSWORD_DEFAULT);
-    $sub = mysqli_real_escape_string($conn, $_POST['t_subject']);
-    $sal = (float)$_POST['t_salary'];
-    
-    // Check if email already exists
-    $emailCheck = $conn->query("SELECT id FROM teachers WHERE email='$email' LIMIT 1");
-    if ($emailCheck && $emailCheck->num_rows > 0) {
-        $msg = "⚠️ Error: This email is already registered to another teacher!";
+    $name = trim($_POST['t_name']);
+    $email = trim($_POST['t_email']);
+    $pass = $_POST['t_pass'];
+    $sub = trim($_POST['t_subject']);
+    $sal = isset($_POST['t_salary']) ? (float)$_POST['t_salary'] : 0;
+
+    if (empty($name) || empty($email) || empty($pass) || empty($sub) || $sal <= 0) {
+        $msg = "⚠️ Please fill in all teacher fields correctly.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $msg = "⚠️ Please enter a valid email address.";
     } else {
-        $conn->query("INSERT INTO teachers (name, email, password, subject, salary) VALUES ('$name', '$email', '$pass', '$sub', $sal)");
-        $msg = "✅ Teacher added successfully!";
+        $stmt = $conn->prepare("SELECT id FROM teachers WHERE email = ? LIMIT 1");
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            $msg = "⚠️ Error: This email is already registered to another teacher!";
+            $stmt->close();
+        } else {
+            $stmt->close();
+            $hash = password_hash($pass, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("INSERT INTO teachers (name, email, password, subject, salary) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param('ssssd', $name, $email, $hash, $sub, $sal);
+            $stmt->execute();
+            $stmt->close();
+            $msg = "✅ Teacher added successfully!";
+        }
     }
 }
 
 // --- LOGIC: FIRE/REHIRE TEACHER ---
 if(isset($_GET['toggle_status'])) {
     $id = (int)$_GET['toggle_status'];
-    $conn->query("UPDATE teachers SET status = IF(status='active', 'fired', 'active') WHERE id=$id");
+    $stmt = $conn->prepare("UPDATE teachers SET status = IF(status='active', 'fired', 'active') WHERE id = ?");
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $stmt->close();
     $msg = "Teacher status updated!";
 }
 
@@ -169,7 +201,10 @@ if(isset($_POST['adjust_salary'])) {
     $id = (int)$_POST['t_id'];
     $amt = (float)$_POST['amount'];
     // allow positive or negative adjustment
-    $conn->query("UPDATE teachers SET salary = salary + $amt WHERE id=$id");
+    $stmt = $conn->prepare("UPDATE teachers SET salary = salary + ? WHERE id = ?");
+    $stmt->bind_param('di', $amt, $id);
+    $stmt->execute();
+    $stmt->close();
     $msg = "Base salary adjusted!";
 }
 
@@ -177,38 +212,69 @@ if(isset($_POST['adjust_salary'])) {
 if(isset($_GET['delete_teacher'])) {
     $id = (int)$_GET['delete_teacher'];
     // optionally cascade or keep related data
-    $conn->query("DELETE FROM teachers WHERE id=$id");
+    $stmt = $conn->prepare("DELETE FROM teachers WHERE id = ?");
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $stmt->close();
     $msg = "Teacher record removed!";
 }
 
 // --- LOGIC: UPDATE TEACHER DETAILS ---
 if(isset($_POST['update_teacher'])) {
     $id = (int)$_POST['t_id'];
-    $name = mysqli_real_escape_string($conn, $_POST['t_name']);
-    $email = mysqli_real_escape_string($conn, $_POST['t_email']);
-    $sub = mysqli_real_escape_string($conn, $_POST['t_subject']);
+    $name = trim($_POST['t_name']);
+    $email = trim($_POST['t_email']);
+    $sub = trim($_POST['t_subject']);
     $sal = (float)$_POST['t_salary'];
     $paid = isset($_POST['t_paid']) ? (float)$_POST['t_paid'] : 0;
     $online = isset($_POST['t_online']) ? (int)$_POST['t_online'] : 0;
-    $query = "UPDATE teachers SET name='$name', email='$email', subject='$sub', salary=$sal, paid_salary=$paid, total_online_minutes=$online";
-    if(!empty($_POST['t_pass'])) {
-        $pass = password_hash($_POST['t_pass'], PASSWORD_DEFAULT);
-        $query .= ", password='$pass'";
+
+    if (empty($name) || empty($email) || empty($sub) || $sal < 0 || $paid < 0 || $online < 0) {
+        $msg = "⚠️ Invalid input for teacher update.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $msg = "⚠️ Please enter a valid email address.";
+    } else {
+        $query = "UPDATE teachers SET name=?, email=?, subject=?, salary=?, paid_salary=?, total_online_minutes=?";
+        $types = 'sssddd';
+        $params = [$name, $email, $sub, $sal, $paid, $online];
+
+        if (!empty($_POST['t_pass'])) {
+            $pass = password_hash($_POST['t_pass'], PASSWORD_DEFAULT);
+            $query .= ", password=?";
+            $types .= 's';
+            $params[] = $pass;
+        }
+
+        $query .= " WHERE id=?";
+        $types .= 'i';
+        $params[] = $id;
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $stmt->close();
+
+        $msg = "Teacher record updated!";
     }
-    $query .= " WHERE id=$id";
-    $conn->query($query);
-    $msg = "Teacher record updated!";
 }
 
 // --- LOGIC: REGISTER/UPDATE STUDENT ---
 if (isset($_POST['register_student'])) {
-    $name = mysqli_real_escape_string($conn, $_POST['name']);
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $course = mysqli_real_escape_string($conn, $_POST['course']);
+    $name = trim($_POST['name']);
+    $phone = trim($_POST['phone']);
+    $course = trim($_POST['course']);
     $total = (int)$_POST['total_fee'];
     $paid = (int)$_POST['paid_fee'];
-    $conn->query("INSERT INTO students (name, phone_number, enrolled_course, total_fee, paid_fee) VALUES ('$name', '$phone', '$course', $total, $paid)");
-    $msg = "Student Registered!";
+
+    if ($total < 0 || $paid < 0) {
+        $msg = "⚠️ Invalid fee values.";
+    } else {
+        $stmt = $conn->prepare("INSERT INTO students (name, phone_number, enrolled_course, total_fee, paid_fee) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param('sssdd', $name, $phone, $course, $total, $paid);
+        $stmt->execute();
+        $stmt->close();
+        $msg = "Student Registered!";
+    }
 }
 
 if (isset($_POST['admin_add_student'])) {
@@ -336,9 +402,77 @@ if (isset($_GET['approve_cert'])) {
     }
 }
 
+// Enrollment approval workflow
+if (isset($_GET['approve_enrollment'])) {
+    $sid = (int)$_GET['approve_enrollment'];
+    $conn->query("UPDATE students SET enrollment_status='approved', enrollment_approved_at=NOW() WHERE id=$sid");
+    $msg = "Student enrollment approved!";
+
+    // Notify student by email (requires mail server configuration)
+    $studentRow = $conn->query("SELECT email, name FROM students WHERE id=$sid LIMIT 1")->fetch_assoc();
+    if ($studentRow && !empty($studentRow['email'])) {
+        $to = $studentRow['email'];
+        $subject = "Your Inspire Tech enrollment has been approved";
+        $bodyHtml = "<p>Hello " . htmlspecialchars($studentRow['name']) . ",</p>\n" .
+            "<p>Your enrollment request has been approved by the admin. You can now log in and access your course.</p>\n" .
+            "<p><strong>Next Steps:</strong></p>\n" .
+            "<ul>\n" .
+            "<li>Log in at <a href='" . (isset($_SERVER['HTTP_HOST']) ? 'http://' . $_SERVER['HTTP_HOST'] : '') . "/student-portal.php'>Student Portal</a></li>\n" .
+            "<li>Go to the Dashboard to access your classroom.</li>\n" .
+            "</ul>\n" .
+            "<p>Best regards,<br>Inspire Tech Team</p>";
+
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
+        $headers .= "From: Inspire Tech <no-reply@inspire-tech.local>" . "\r\n";
+
+        @mail($to, $subject, $bodyHtml, $headers);
+
+        // Log notification for audit
+        $logStmt = $conn->prepare("INSERT INTO enrollment_notifications (student_id, action, email, subject, body) VALUES (?, ?, ?, ?, ?)");
+        if ($logStmt) {
+            $action = 'approved';
+            $logStmt->bind_param('issss', $sid, $action, $to, $subject, $bodyHtml);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+    }
+}
+
+if (isset($_GET['reject_enrollment'])) {
+    $sid = (int)$_GET['reject_enrollment'];
+    $conn->query("UPDATE students SET enrollment_status='rejected' WHERE id=$sid");
+    $msg = "Student enrollment request rejected.";
+
+    $studentRow = $conn->query("SELECT email, name FROM students WHERE id=$sid LIMIT 1")->fetch_assoc();
+    if ($studentRow && !empty($studentRow['email'])) {
+        $to = $studentRow['email'];
+        $subject = "Your Inspire Tech enrollment has been declined";
+        $bodyHtml = "<p>Hello " . htmlspecialchars($studentRow['name']) . ",</p>\n" .
+            "<p>Your enrollment request was declined by the admin. If you believe this is a mistake, please contact the admin team.</p>\n" .
+            "<p>Best regards,<br>Inspire Tech Team</p>";
+
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
+        $headers .= "From: Inspire Tech <no-reply@inspire-tech.local>" . "\r\n";
+
+        @mail($to, $subject, $bodyHtml, $headers);
+
+        // Log notification for audit
+        $logStmt = $conn->prepare("INSERT INTO enrollment_notifications (student_id, action, email, subject, body) VALUES (?, ?, ?, ?, ?)");
+        if ($logStmt) {
+            $action = 'rejected';
+            $logStmt->bind_param('issss', $sid, $action, $to, $subject, $bodyHtml);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+    }
+}
+
 // --- ANALYTICS ---
 $stats = $conn->query("SELECT COUNT(*) as total, SUM(paid_fee) as rev, SUM(total_fee - paid_fee) as dues FROM students")->fetch_assoc();
 $pendingCerts = (int)$conn->query("SELECT COUNT(*) as cnt FROM certificate_requests WHERE status='pending'")->fetch_assoc()['cnt'];
+$pendingEnrolls = (int)$conn->query("SELECT COUNT(*) as cnt FROM students WHERE enrollment_status='pending'")->fetch_assoc()['cnt'];
 
 // Course fee list (for quick fee template)
 $courseFeesRes = $conn->query("SELECT id, course_name, total_fee FROM course_fees ORDER BY course_name");
@@ -375,7 +509,7 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -383,168 +517,12 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
     <title>Inspire Tech | Admin Master</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #0d6efd;
-            --bg: #f4f7f6;
-            --card: #ffffff;
-            --text: #212529;
-        }
-
-        [data-theme="dark"] {
-            --bg: #121212;
-            --card: #1e1e1e;
-            --text: #e0e0e0;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', sans-serif;
-            transition: 0.3s;
-        }
-
-        .sidebar {
-            width: 260px;
-            height: 100vh;
-            background: var(--card);
-            position: fixed;
-            border-right: 1px solid rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-
-        .main-content {
-            margin-left: 260px;
-            padding: 30px;
-        }
-
-        .stat-card {
-            background: var(--card);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            border-bottom: 4px solid var(--primary);
-        }
-
-        .action-panel {
-            background: var(--card);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .nav-link {
-            color: var(--text);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 5px;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
-            color: white !important;
-        }
-
-        .unread-row {
-            background-color: rgba(13, 110, 253, 0.05) !important;
-        }
-
-        /* teacher status colours */
-        .status-active { color: #198754; font-weight: bold; }
-        .status-fired { color: #dc3545; font-weight: bold; }
-        .timer-badge { background: #0d6efd; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
-
-        /* monitoring table row highlights */
-        .monitor-online { background-color: rgba(25, 135, 84, 0.08); }
-        .monitor-offline { background-color: rgba(108, 117, 125, 0.04); }
-
-        #monitorLastUpdated { font-size: 0.85rem; color: #6c757d; display: block; }
-
-        /* teacher action icons spacing */
-        .teacher-actions .btn { margin-right: 4px; }
-        /* ensure inline form inputs wrap and don't overflow */
-        #teacherSection form input { min-width: 0; }
-        /* search bar spacing when wrapped */
-        #teacherSection .d-flex input { margin-top: 0.5rem; }
-        /* beautify teacher form - eye-catching color gradient */
-        #teacherSection .add-form { 
-            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-            padding: 1.5rem; 
-            border-radius: 1rem; 
-            border: 2px solid #7c3aed;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.15);
-        }
-        #teacherSection .add-form .form-control { 
-            border-radius: .75rem; 
-            border: 1.5px solid #9333ea;
-            background: white;
-            transition: 0.3s;
-        }
-        #teacherSection .add-form .form-control:focus { 
-            border-color: #7c3aed;
-            box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.25);
-            background: #fafaf9;
-        }
-        #teacherSection .add-form .input-group-text { 
-            background: linear-gradient(135deg, #7c3aed, #9333ea);
-            color: white;
-            border: 1.5px solid #7c3aed;
-            font-weight: 600;
-        }
-        #teacherSection .add-form .btn-primary { 
-            font-weight: 700;
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            border: none;
-            transition: 0.3s;
-        }
-        #teacherSection .add-form .btn-primary:hover { 
-            background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
-        }
-        #teacherSection table tbody tr:hover { background: rgba(124, 58, 237, .08); }
-
-        @media (max-width: 992px) {
-            .sidebar {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
-
-    <div class="sidebar">
-        <div class="text-center mb-4">
-            <h4 class="fw-bold text-primary">Inspire Tech</h4>
-            <button id="theme-toggle" class="btn btn-sm btn-outline-secondary w-100 mt-2">Toggle Theme</button>
-        </div>
-        <nav class="nav flex-column">
-            <a class="nav-link active" href="#"><i class="fas fa-th-large me-2"></i> Dashboard</a>
-            <a class="nav-link" href="#messagesSection">
-                <i class="fas fa-envelope me-2"></i> Messages
-                <?php if ($msgCount > 0): ?><span class="badge bg-danger ms-1"><?= $msgCount ?></span><?php endif; ?>
-            </a>
-            <a class="nav-link" href="#feeSection"><i class="fas fa-money-check-alt me-2"></i> Fees</a>
-            <a class="nav-link" href="#certSection">
-                <i class="fas fa-certificate me-2"></i> Certificates
-                <span id="cert-badge"><?php if ($pendingCerts > 0): ?><span class="badge bg-danger ms-1"><?= $pendingCerts ?></span><?php endif; ?></span>
-            </a>
-            <a class="nav-link" href="#studentSection"><i class="fas fa-users me-2"></i> Students</a>
-            <a class="nav-link" href="#teacherSection"><i class="fas fa-chalkboard-teacher me-2"></i> Teachers</a>
-            <hr>
-            <a class="nav-link text-danger" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
-        </nav>
-    </div>
-
-    <div class="main-content">
-        <div class="row g-4 mb-4">
+<body class="admin-dashboard">
+    <?php include 'navbar_admin.php'; ?>
+            <div class="row g-4 mb-4">
             <div class="col-md-4">
                 <div class="stat-card">
                     <h6>Total Students</h6>
@@ -862,6 +840,38 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
             </div>
         </div>
 
+        <div id="enrollmentSection" class="action-panel border-start border-4 border-primary">
+            <h5 class="fw-bold mb-3"><i class="fas fa-user-clock text-primary"></i> Enrollment Requests</h5>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Requested</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $pendingEnrollRes = $conn->query("SELECT id, name, enrolled_course, enrollment_requested_at FROM students WHERE enrollment_status='pending' ORDER BY enrollment_requested_at DESC");
+                        if ($pendingEnrollRes->num_rows == 0) echo "<tr><td colspan='4' class='text-muted'>No pending enrollment requests</td></tr>";
+                        while ($pe = $pendingEnrollRes->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($pe['name']) ?></td>
+                                <td><?= htmlspecialchars($pe['enrolled_course']) ?></td>
+                                <td><?= date('M d, Y H:i', strtotime($pe['enrollment_requested_at'])) ?></td>
+                                <td>
+                                    <a href="?approve_enrollment=<?= $pe['id'] ?>" class="btn btn-sm btn-success">Approve</a>
+                                    <a href="?reject_enrollment=<?= $pe['id'] ?>" class="btn btn-sm btn-danger">Reject</a>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <div class="action-panel">
@@ -899,18 +909,25 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
                             <th>Course</th>
                             <th>Fees Balance</th>
                             <th>Teacher</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentTable">
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="studentTable">
                         <?php $res = $conn->query("SELECT s.*, t.name AS teacher_name FROM students s LEFT JOIN teachers t ON s.assigned_teacher_id = t.id ORDER BY s.id DESC");
-                        while ($s = $res->fetch_assoc()): ?>
+                        while ($s = $res->fetch_assoc()): 
+                            $status = $s['enrollment_status'] ?? 'pending';
+                            $statusClass = 'secondary';
+                            if ($status === 'approved') $statusClass = 'success';
+                            elseif ($status === 'rejected') $statusClass = 'danger';
+                            elseif ($status === 'pending') $statusClass = 'warning';
+                        ?>
                             <tr>
                                 <td class="fw-bold"><?= $s['name'] ?></td>
                                 <td><?= $s['enrolled_course'] ?></td>
                                 <td><small>Paid: <?= $s['paid_fee'] ?> / Total: <?= $s['total_fee'] ?></small></td>
                                 <td><small><?= htmlspecialchars($s['teacher_name'] ?? '—') ?></small></td>
-                                <td>
+                                <td><span class="badge bg-<?= $statusClass ?>"><?= ucfirst($status) ?></span></td>
                                     <button class="btn btn-sm btn-outline-primary edit-btn"
                                         data-id="<?= $s['id'] ?>" data-name="<?= $s['name'] ?>"
                                         data-phone="<?= $s['phone_number'] ?>" data-course="<?= $s['enrolled_course'] ?>"
@@ -1059,8 +1076,7 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
                 </table>
             </div>
         </div>
-
-    <!-- Modal: Hire Teacher -->
+    </div>
     <div class="modal fade" id="hireModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1259,12 +1275,6 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Theme Toggle
-        document.getElementById('theme-toggle').onclick = () => {
-            const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-        };
-
         // Real-time Search (students)
         document.getElementById('search').onkeyup = function() {
             let val = this.value.toLowerCase();

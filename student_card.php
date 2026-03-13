@@ -101,83 +101,7 @@ if (isset($_POST['change_password'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-
-    <style>
-        :root {
-            --accent: #00ffd5;
-            --bg: #0f172a;
-            --card: #1e293b;
-        }
-
-        body {
-            background: var(--bg);
-            color: #f8fafc;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .main-card {
-            background: var(--card);
-            border: 1px solid #334155;
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .profile-pic-container {
-            position: relative;
-            width: 150px;
-            margin: 0 auto;
-        }
-
-        .profile-pic {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--accent);
-        }
-
-        .form-control {
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: white;
-            padding: 12px;
-        }
-
-        .form-control:focus {
-            background: #0f172a;
-            color: white;
-            border-color: var(--accent);
-            box-shadow: none;
-        }
-
-        .locked {
-            background: #111827 !important;
-            color: #64748b !important;
-            cursor: not-allowed;
-            border-color: #1e293b !important;
-        }
-
-        .btn-glow {
-            background: linear-gradient(45deg, var(--accent), #00a8ff);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            transition: 0.3s;
-        }
-
-        .btn-glow:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 255, 213, 0.4);
-            color: #000;
-        }
-
-        .section-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+    <link rel="stylesheet" href="style.css">
             border-bottom: 1px solid #334155;
             padding-bottom: 10px;
             margin-bottom: 25px;
@@ -210,7 +134,7 @@ if (isset($_POST['change_password'])) {
     </style>
 </head>
 
-<body>
+<body class="profile-page">
 
     <div class="container pb-5">
         <div class="row justify-content-center">

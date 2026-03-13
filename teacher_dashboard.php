@@ -73,7 +73,7 @@ $notices = $conn->query("SELECT * FROM notices ORDER BY created_at DESC LIMIT 5"
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -81,157 +81,14 @@ $notices = $conn->query("SELECT * FROM notices ORDER BY created_at DESC LIMIT 5"
     <title>Teacher Portal | Inspire Tech</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #6f42c1;
-            --bg: #f8f9fa;
-            --card: #ffffff;
-            --text: #212529;
-            --sidebar: #ffffff;
-        }
-
-        [data-theme="dark"] {
-            --bg: #121212;
-            --card: #1e1e1e;
-            --text: #e0e0e0;
-            --sidebar: #181818;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            transition: 0.3s;
-            overflow-x: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        #sidebar {
-            width: 280px;
-            height: 100vh;
-            position: fixed;
-            background: var(--sidebar);
-            border-right: 1px solid rgba(0, 0, 0, 0.1);
-            transition: 0.3s;
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        #sidebar.active {
-            margin-left: -280px;
-        }
-
-        .main-content {
-            margin-left: 280px;
-            padding: 20px;
-            transition: 0.3s;
-            min-height: 100vh;
-        }
-
-        .main-content.active {
-            margin-left: 0;
-        }
-
-        .nav-link {
-            color: var(--text);
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin: 0 10px;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
-            color: white !important;
-        }
-
-        .stat-card {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .notice-item {
-            border-left: 4px solid var(--primary);
-            background: var(--bg);
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-        }
-
-        #sidebar .form-control-sm {
-            background: rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            color: var(--text);
-        }
-
-        [data-theme="dark"] #sidebar .form-control-sm {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        @media (max-width: 768px) {
-            #sidebar {
-                margin-left: -280px;
-            }
-
-            #sidebar.active {
-                margin-left: 0;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="teacher-dashboard">
 
-    <nav id="sidebar">
-        <div class="p-4 text-center">
-            <h4 class="fw-bold text-primary">Teacher Hub</h4>
-            <div class="mt-3">
-                <?php $avatar = !empty($teacher['profile_pic']) ? $teacher['profile_pic'] : "https://ui-avatars.com/api/?name=" . urlencode($teacher['name']) . "&background=6f42c1&color=fff"; ?>
-                <img src="<?= $avatar ?>" class="rounded-circle mb-2 border border-3 border-primary" style="height: 80px; width: 80px; object-fit: cover;">
-                <h6><?= htmlspecialchars($teacher['name']) ?></h6>
-                <span class="badge bg-success small">Active Session</span>
-            </div>
+    <?php include 'navbar_teacher.php'; ?>
 
-            <div class="mt-4 text-start p-3 rounded shadow-sm" style="background: rgba(0,0,0,0.02);">
-                <form method="POST" enctype="multipart/form-data">
-                    <p class="fw-bold small mb-2"><i class="fas fa-user-edit me-1"></i> Quick Update</p>
-                    <input name="name" class="form-control form-control-sm mb-2" value="<?= htmlspecialchars($teacher['name']) ?>" placeholder="Name" required>
-                    <input name="subject" class="form-control form-control-sm mb-2" value="<?= htmlspecialchars($teacher['subject']) ?>" placeholder="Subject">
-                    <input type="password" name="password" class="form-control form-control-sm mb-2" placeholder="New Password">
-                    <label class="small text-muted">Profile Photo</label>
-                    <input type="file" name="profile_pic" accept="image/*" class="form-control form-control-sm mb-3">
-                    <button type="submit" name="update_profile" class="btn btn-sm btn-primary w-100 shadow-sm">Save Changes</button>
-                </form>
-                <?php if ($profile_msg): ?>
-                    <div class="alert alert-success mt-2 py-1 px-2 small mb-0"><?= $profile_msg ?></div>
-                <?php endif; ?>
-            </div>
-        </div>
-        <div class="nav flex-column mt-2">
-            <a href="#" class="nav-link active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
-            <a href="#studentSection" class="nav-link"><i class="fas fa-users me-2"></i> My Students</a>
-            <hr class="mx-3">
-            <button id="theme-toggle" class="btn btn-sm btn-outline-secondary mx-4 mb-2">Toggle Dark Mode</button>
-            <a href="teacher_logout.php" class="nav-link text-danger"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
-        </div>
-    </nav>
-
-    <div class="main-content" id="content">
-        <!-- Top Navbar -->
-        <nav class="navbar navbar-expand-lg mb-4 rounded shadow-sm px-3" style="background: var(--card);">
-            <button type="button" id="sidebarCollapse" class="btn btn-primary btn-sm"><i class="fas fa-bars"></i></button>
-            <div class="ms-auto d-flex align-items-center">
-                <span class="me-3 d-none d-md-inline text-muted small">Specialization: <strong><?= htmlspecialchars($teacher['subject']) ?></strong></span>
-                <span id="session-timer" class="badge bg-dark p-2">00:00:00</span>
-            </div>
-        </nav>
-
+    <div class="container mt-4">
         <!-- Stats Row -->
         <div class="row g-4 mb-4">
             <div class="col-md-4">

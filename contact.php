@@ -38,73 +38,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Contact Us | Inspire Tech School of IT</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --glass: rgba(255, 255, 255, 0.05);
-            --primary-glow: #00ffd5;
-        }
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .contact-card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 30px;
-        }
-        .social-box {
-            background: #1e293b;
-            padding: 15px;
-            border-radius: 12px;
-            text-decoration: none;
-            color: white;
-            display: flex;
-            align-items: center;
-            transition: 0.3s;
-            margin-bottom: 15px;
-            border: 1px solid transparent;
-        }
-        .social-box:hover {
-            transform: translateX(10px);
-            border-color: var(--primary-glow);
-            color: var(--primary-glow);
-        }
-        .social-box i {
-            font-size: 1.5rem;
-            margin-right: 15px;
-            width: 30px;
-            text-align: center;
-        }
-        .form-control {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid #334155;
-            color: white;
-        }
-        .form-control:focus {
-            background: rgba(0,0,0,0.3);
-            border-color: var(--primary-glow);
-            color: white;
-            box-shadow: none;
-        }
-        .btn-send {
-            background: var(--primary-glow);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            padding: 12px;
-            width: 100%;
-        }
-        /* Custom colors for social brands */
-        .fa-whatsapp { color: #25D366; }
-        .fa-facebook { color: #1877F2; }
-        .fa-linkedin { color: #0A66C2; }
-        .fa-tiktok { color: #ff0050; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="contact-page">
 
 <div id="contact" class="container py-5">
     <div class="text-center mb-5">

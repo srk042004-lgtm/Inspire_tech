@@ -55,36 +55,11 @@ if (isset($_POST['login'])) {
     <title>Teacher Login | Inspire Tech</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body { 
-            background: #f0f2f5; 
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            background: #fff;
-            padding: 35px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-top: 6px solid #6f42c1;
-        }
-        .btn-purple {
-            background: #6f42c1;
-            color: white;
-            font-weight: 600;
-        }
-        .btn-purple:hover {
-            background: #5a32a3;
-            color: white;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <?php include 'navbar_auth.php'; ?>
 
     <div class="login-card">
         <div class="text-center mb-4">

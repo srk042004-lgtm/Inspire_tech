@@ -1,5 +1,5 @@
 <?php
-session_start();
+include 'secure_session.php';
 include('db_connect.php');
 
 /**
@@ -35,32 +35,50 @@ if ($adminCount == 0) {
  * 3. REGISTRATION LOGIC
  */
 if (isset($_POST['register'])) {
-    $name = mysqli_real_escape_string($conn, $_POST['fullname']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $pass = password_hash($_POST['password'], PASSWORD_BCRYPT);
+    $name = trim($_POST['fullname']);
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
 
-    $check = $conn->query("SELECT * FROM admins WHERE email='$email'");
-    if ($check->num_rows > 0) {
-        $message = "<div class='alert alert-danger'>Email already exists!</div>";
+    if (empty($name) || empty($email) || empty($password)) {
+        $message = "<div class='alert alert-danger'>Please fill all required fields.</div>";
+        $showRegister = true;
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = "<div class='alert alert-danger'>Please provide a valid email address.</div>";
         $showRegister = true;
     } else {
-        // First user ever? Approve immediately (Status 1). Others? Stay pending (Status 0).
-        $status = ($adminCount == 0) ? 1 : 0;
+        $stmt = $conn->prepare("SELECT id FROM admins WHERE email = ?");
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $stmt->store_result();
 
-        $sql = "INSERT INTO admins (fullname, email, password, is_approved) VALUES ('$name', '$email', '$pass', $status)";
-
-        if ($conn->query($sql)) {
-            if ($status == 1) {
-                $_SESSION['admin_logged_in'] = true;
-                $_SESSION['admin_name'] = $name;
-                header("Location: admin_dashboard.php");
-                exit;
-            } else {
-                $message = "<div class='alert alert-success'>Request sent! Wait for Principal approval.</div>";
-                $showRegister = false;
-            }
+        if ($stmt->num_rows > 0) {
+            $message = "<div class='alert alert-danger'>Email already exists!</div>";
+            $showRegister = true;
+            $stmt->close();
         } else {
-            $message = "<div class='alert alert-danger'>Error: " . $conn->error . "</div>";
+            $stmt->close();
+
+            $status = ($adminCount == 0) ? 1 : 0;
+            $hash = password_hash($password, PASSWORD_BCRYPT);
+
+            $stmt = $conn->prepare("INSERT INTO admins (fullname, email, password, is_approved) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param('sssi', $name, $email, $hash, $status);
+
+            if ($stmt->execute()) {
+                if ($status == 1) {
+                    session_regenerate_id(true);
+                    $_SESSION['admin_logged_in'] = true;
+                    $_SESSION['admin_name'] = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+                    header("Location: admin_dashboard.php");
+                    exit;
+                } else {
+                    $message = "<div class='alert alert-success'>Request sent! Wait for Principal approval.</div>";
+                    $showRegister = false;
+                }
+            } else {
+                $message = "<div class='alert alert-danger'>Error: " . htmlspecialchars($stmt->error) . "</div>";
+            }
+            $stmt->close();
         }
     }
 }
@@ -69,28 +87,39 @@ if (isset($_POST['register'])) {
  * 4. LOGIN LOGIC
  */
 if (isset($_POST['login'])) {
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $email = trim($_POST['email']);
     $pass = $_POST['password'];
 
-    $res = $conn->query("SELECT * FROM admins WHERE email='$email'");
-    if ($res->num_rows > 0) {
-        $admin = $res->fetch_assoc();
-        // Check password
-        if (password_verify($pass, $admin['password'])) {
-            // Check if Principal has approved this staff member
-            if ($admin['is_approved'] == 1) {
-                $_SESSION['admin_logged_in'] = true;
-                $_SESSION['admin_name'] = $admin['fullname'];
-                header("Location: admin_dashboard.php");
-                exit;
+    if (empty($email) || empty($pass)) {
+        $message = "<div class='alert alert-danger'>Please enter both email and password.</div>";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = "<div class='alert alert-danger'>Please enter a valid email address.</div>";
+    } else {
+        $stmt = $conn->prepare("SELECT id, fullname, password, is_approved FROM admins WHERE email = ?");
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $admin = $result->fetch_assoc();
+            if (password_verify($pass, $admin['password'])) {
+                if ($admin['is_approved'] == 1) {
+                    session_regenerate_id(true);
+                    $_SESSION['admin_logged_in'] = true;
+                    $_SESSION['admin_name'] = htmlspecialchars($admin['fullname'], ENT_QUOTES, 'UTF-8');
+                    header("Location: admin_dashboard.php");
+                    exit;
+                } else {
+                    $message = "<div class='alert alert-warning'>Your account is pending Principal approval.</div>";
+                }
             } else {
-                $message = "<div class='alert alert-warning'>Your account is pending Principal approval.</div>";
+                $message = "<div class='alert alert-danger'>Incorrect password.</div>";
             }
         } else {
-            $message = "<div class='alert alert-danger'>Incorrect password.</div>";
+            $message = "<div class='alert alert-danger'>Admin email not found.</div>";
         }
-    } else {
-        $message = "<div class='alert alert-danger'>Admin email not found.</div>";
+
+        $stmt->close();
     }
 }
 ?>
@@ -105,83 +134,12 @@ if (isset($_POST['login'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <style>
-        body {
-            background: #020617;
-            color: #fff;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-        }
-
-        .auth-card {
-            background: #0f172a;
-            border: 1px solid #1e293b;
-            padding: 40px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-
-        .logo-img {
-            width: 85px;
-            height: 85px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #06b6d4;
-            margin-bottom: 15px;
-        }
-
-        .btn-cyan {
-            background: #06b6d4;
-            color: #fff;
-            border: none;
-            font-weight: 600;
-            transition: 0.3s;
-            padding: 12px;
-        }
-
-        .btn-cyan:hover {
-            background: #0891b2;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
-        }
-
-        .form-control {
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #fff;
-            padding: 12px;
-        }
-
-        .form-control:focus {
-            background: #1e293b;
-            color: #fff;
-            border-color: #06b6d4;
-            box-shadow: none;
-        }
-
-        .toggle-link {
-            color: #06b6d4;
-            text-decoration: none;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        label {
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css" />
 </head>
 
-<body>
+<body class="admin-auth-page">
+
+    <?php include 'navbar_auth.php'; ?>
 
     <div class="auth-card text-center animate__animated animate__zoomIn">
         <img src="uploads/340827876_5872631156182041_1179006399808807244_n.jpg" class="logo-img" alt="Logo">

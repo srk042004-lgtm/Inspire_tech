@@ -26,103 +26,11 @@ if (isset($_GET['id'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <style>
-      body {
-        font-family: "Segoe UI", sans-serif;
-        background: #0f172a;
-        color: white;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .navbar {
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid #1e293b;
-      }
-
-      .academy-logo {
-        font-size: 1.5rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        background: linear-gradient(45deg, #00ffd5, #00a8ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .verify-card {
-        background: #1e293b;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        overflow: hidden;
-        color: white;
-      }
-
-      .verified-badge {
-        background: #28a745;
-        color: white;
-        padding: 5px 15px;
-        border-radius: 50px;
-        font-size: 0.8rem;
-      }
-
-      .student-photo {
-        width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 10px;
-        border: 3px solid #334155;
-      }
-
-      .input-group-text {
-        cursor: pointer;
-      }
-
-      /* light theme overrides */
-      .light-theme body {
-        background: #f8fafc;
-        color: #0f172a;
-      }
-      .light-theme .navbar {
-        background: rgba(255, 255, 255, 0.8);
-        border-bottom: 1px solid #cbd5e1;
-      }
-      .light-theme .navbar .text-secondary {
-        color: #0f172a !important;
-      }
-      .light-theme .verify-card {
-        background: #ffffff;
-        color: #0f172a;
-      }
-      .light-theme .form-control {
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #0f172a;
-      }
-      .light-theme .form-control::placeholder {
-        color: #6b7280;
-      }
-      .light-theme .footer {
-        background: #f1f5f9;
-        color: #64748b;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
 </head>
 
-<body>
-
-  <nav class="navbar navbar-expand-lg">
-    <div class="container">
-      <a class="navbar-brand academy-logo" href="home_page.php">INSPIRE TECH SCHOOL OF IT</a>
-      <div class="ms-auto d-flex align-items-center gap-3">
-        <button id="themeBtn" class="btn btn-sm btn-outline-light" title="Toggle light/dark">
-          <i class="fas fa-sun"></i>
-        </button>
-        <a href="home_page.php" class="text-secondary text-decoration-none small"><i class="fas fa-arrow-left me-1"></i> Back to Home</a>
-      </div>
-    </div>
-  </nav>
+<body class="verify-page">
+  <?php include 'navbar.php'; ?>
 
     <div class="page-header">
         <div class="container text-center">
@@ -174,61 +82,21 @@ if (isset($_GET['id'])) {
         </div>
     </div>
 
-  <footer class="footer text-center">
+  <footer class="main-footer text-center">
     <div class="container">
-      <p class="mb-1 fw-bold text-white">Inspire Tech Computer Academy</p>
+      <p class="mb-1 fw-bold">Inspire Tech Computer Academy</p>
       <p class="mb-2">Second Floor Khattak Building Nowshera Cantt</p>
       <div class="d-flex justify-content-center gap-3">
         <span class="small"><i class="fas fa-phone text-info me-1"></i> 03462345453</span>
         <span class="small"><i class="fas fa-user text-info me-1"></i> Raheel Ahmad</span>
       </div>
+      <p class="mt-4 small">&copy; 2026 Inspire Tech Academy</p>
     </div>
   </footer>
 
-  <footer style="text-align: center; padding: 20px;">
-    <p>&copy; 2026 Inspire Tech Academy</p>
-    <a href="admin_dashboard.php" style="color: transparent; text-decoration: none; font-size: 1px;">.</a>
-  </footer>
-
-  <footer class="footer text-center">
-    <div class="container">
-      <p class="mb-1 fw-bold text-white">Inspire Tech Computer Academy</p>
-      <p class="mb-2">Second Floor Khattak Building Nowshera Cantt</p>
-      <div class="d-flex justify-content-center gap-3">
-        <span class="small"><i class="fas fa-phone text-info me-1"></i> 03462345453</span>
-        <span class="small"><i class="fas fa-user text-info me-1"></i> Raheel Ahmad</span>
-      </div>
-    </div>
-  </footer>
-
-  <footer style="text-align: center; padding: 20px;">
-    <p>&copy; 2026 Inspire Tech Academy</p>
-    <a href="admin_dashboard.php" style="color: transparent; text-decoration: none; font-size: 1px;">.</a>
-  </footer>
-
-  <script>
-    // theme toggle script
-    const themeBtn = document.getElementById('themeBtn');
-    function applyTheme(theme) {
-      document.documentElement.classList.toggle('light-theme', theme === 'light');
-      if (themeBtn) {
-        themeBtn.innerHTML = theme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-      }
-    }
-    function toggleTheme() {
-      const current = localStorage.getItem('theme') || 'dark';
-      const next = current === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('theme', next);
-      applyTheme(next);
-    }
-    if (themeBtn) {
-      themeBtn.addEventListener('click', toggleTheme);
-      const saved = localStorage.getItem('theme') || 'dark';
-      applyTheme(saved);
-    }
-  </script>
-
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="support-hub.js"></script>
 </body>
+</html>
 
 </html>

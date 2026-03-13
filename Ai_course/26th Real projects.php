@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Class 26 - Industry Deployment | Inspire Tech Academy</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />    <link rel="stylesheet" href="../style.css" /></head>
+  <body class="ai-course-page ai-course-page">
+    <?php include 'navbar.php'; ?>
+
+     <div class="container">
+    <div class="row">
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sidebar">
+                <h5>Ai_course Map</h5>
+                <a href="25th Real projects.php" class="class-item active"><i class="fas fa-play-circle"></i> 25. Real Projects of AI</a>
+                <a href="26th Real projects.php" class="class-item active"><i class="fas fa-lock"></i> 26. Real Projects of AI 2</a>
+                <a href="27th Real projects.php" class="class-item"><i class="fas fa-lock"></i> 27. Real Projects of AI 3</a>
+                
+
+
+            </div>
+        </div>
+
+
+
+        <div class="col-lg-9">
+          <div class="content-card animate__animated animate__fadeIn">
+            <h2 class="topic-header">
+              <i class="fas fa-th-list"></i> Class 85: AI Recommendation Engines
+            </h2>
+            <p>
+              Modern businesses thrive on personalization. In this class, we
+              move beyond simple search to
+              <strong>Collaborative Filtering</strong>. This technology analyzes
+              patterns from thousands of users to predict what a specific
+              individual might like next. We use
+              <strong>Cosine Similarity</strong>—a mathematical formula that
+              measures the angle between two vectors (products) to determine how
+              similar they are. If two users have similar purchase histories,
+              the AI "borrows" ideas from one to recommend to the other. For our
+              students, we provide a clean workflow: transform text into numbers
+              using <code>CountVectorizer</code>, calculate similarity matrices,
+              and filter results. This is the exact logic used by YouTube for
+              your "Up Next" videos.
+            </p>
+
+            <div class="step-box">
+              <div class="step-title">How to build it (Step-by-Step)</div>
+              <ol>
+                <li>
+                  <strong>Feature Extraction:</strong> Convert product tags
+                  (genre, brand, color) into a numerical matrix.
+                </li>
+                <li>
+                  <strong>Similarity Scoring:</strong> Use
+                  <code>cosine_similarity</code> from Scikit-Learn to compare
+                  every item.
+                </li>
+                <li>
+                  <strong>Recommendation Logic:</strong> Create a function that
+                  takes an item name and returns the top 5 highest-scoring
+                  neighbors.
+                </li>
+              </ol>
+            </div>
+
+            <div class="code-window">
+              <span class="code-label">Python (Scikit-Learn)</span>
+              from sklearn.metrics.pairwise import cosine_similarity<br />
+              from sklearn.feature_extraction.text import CountVectorizer<br /><br />
+              cv = CountVectorizer()<br />
+              vectors = cv.fit_transform(df['tags']).toarray()<br />
+              similarity = cosine_similarity(vectors)<br /><br />
+              def recommend(movie):<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;index = df[df['title'] ==
+              movie].index[0]<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;distances =
+              sorted(list(enumerate(similarity[index])), reverse=True,
+              key=lambda x: x[1])<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;return [df.iloc[i[0]].title for i in
+              distances[1:6]]
+            </div>
+
+            <div class="video-box">
+              <iframe
+                src="https://www.youtube.com/embed/1xtrIEwL_W4"
+                frameborder="0"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2 class="topic-header">
+              <i class="fas fa-window-restore"></i> Class 86: Building the AI
+              Web Interface
+            </h2>
+            <p>
+              Your AI needs a "face" so regular people can use it. We use
+              <strong>Streamlit</strong>, the industry-standard framework for
+              data science apps. Unlike traditional Web_development which
+              requires HTML, CSS, and JavaScript, Streamlit allows you to build
+              a reactive, professional UI entirely in Python. We teach you how
+              to handle <strong>State Management</strong>, so your app remembers
+              what a user clicked. You will learn how to load your heavy AI
+              models once into memory using the
+              <code>@st.cache_resource</code> decorator to ensure your website
+              is lightning-fast. For our students in Nowshera, this is the
+              quickest way to turn a project into a "Startup-ready" product.
+            </p>
+
+            <div class="step-box">
+              <div class="step-title">How to build it (Step-by-Step)</div>
+              <ol>
+                <li>
+                  <strong>Environment Setup:</strong> Install streamlit and
+                  pandas.
+                </li>
+                <li>
+                  <strong>UI Design:</strong> Use <code>st.selectbox</code> for
+                  user inputs and <code>st.columns</code> for layout.
+                </li>
+                <li>
+                  <strong>Model Loading:</strong> Use <code>pickle</code> to
+                  bring your trained recommendation data into the script.
+                </li>
+                <li>
+                  <strong>Trigger Logic:</strong> Wrap the recommendation
+                  function in an <code>if st.button('Recommend'):</code> block.
+                </li>
+              </ol>
+            </div>
+
+            <div class="code-window">
+              <span class="code-label">Streamlit UI Code</span>
+              import streamlit as st<br />
+              import pickle<br /><br />
+              st.title('AI Movie Recommender')<br />
+              movies = pickle.load(open('movies.pkl','rb'))<br />
+              selected_movie = st.selectbox('Select a Movie:',
+              movies['title'].values)<br /><br />
+              if st.button('Get Recommendations'):<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;recs = recommend(selected_movie)<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;for r in recs:<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;st.write(f"- {r}")
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2 class="topic-header">
+              <i class="fas fa-cloud-upload-alt"></i> Class 87: Cloud Deployment
+              & Docker
+            </h2>
+            <p>
+              Deployment is the bridge between your laptop and the world. We
+              focus on <strong>Containerization</strong> using Docker. A Docker
+              container packages your code, your AI model, and all libraries
+              into a single "Box" that runs exactly the same on a server as it
+              does on your computer. You will learn how to write a
+              <strong>Dockerfile</strong> to automate the environment setup. We
+              then use <strong>Streamlit Cloud</strong> or
+              <strong>GitHub Actions</strong> to enable "Continuous
+              Deployment"—every time you fix a bug in your code and push it to
+              GitHub, your live website updates automatically in seconds. This
+              is a critical skill for any "DevOps" or "AI Engineer" role.
+            </p>
+
+            <div class="step-box">
+              <div class="step-title">How to build it (Step-by-Step)</div>
+              <ol>
+                <li>
+                  <strong>Requirements:</strong> Create a
+                  <code>requirements.txt</code> file listing all libraries
+                  (pandas, streamlit, scikit-learn).
+                </li>
+                <li>
+                  <strong>Containerize:</strong> Write a Dockerfile starting
+                  with <code>FROM python:3.9-slim</code>.
+                </li>
+                <li>
+                  <strong>Cloud Link:</strong> Connect your GitHub repo to a
+                  hosting provider.
+                </li>
+                <li>
+                  <strong>Live Check:</strong> Visit your public URL and test
+                  the AI on different devices (mobile, tablet).
+                </li>
+              </ol>
+            </div>
+
+            <div class="code-window">
+              <span class="code-label">Dockerfile (Deployment)</span>
+              FROM python:3.9-slim<br />
+              WORKDIR /app<br />
+              COPY . /app<br />
+              RUN pip install -r requirements.txt<br />
+              EXPOSE 8501<br />
+              CMD ["streamlit", "run", "app.py"]
+            </div>
+          </div>
+
+          <div id="quiz-box">
+            <h4 class="text-success mb-4">
+              <i class="fas fa-graduation-cap me-2"></i> Deployment Mastery
+              Check
+            </h4>
+            <div id="quiz-content">
+              <h5 id="question-text">
+                Q1: Which mathematical method do we use to find the 'similarity'
+                between two AI vectors?
+              </h5>
+              <div id="options-container" class="mt-3">
+                <div class="quiz-option" onclick="checkAnswer(true)">
+                  Cosine Similarity
+                </div>
+                <div class="quiz-option" onclick="checkAnswer(false)">
+                  Addition and Subtraction
+                </div>
+                <div class="quiz-option" onclick="checkAnswer(false)">
+                  Random Selection
+                </div>
+              </div>
+            </div>
+            <div id="feedback" class="mt-3 fw-bold"></div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-5 mb-5">
+            <button
+              class="btn btn-outline-secondary btn-lg rounded-pill px-4"
+              onclick="history.back()"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Previous Page
+            </button>
+            <div id="nav-container" class="d-none">
+              <button class="btn btn-success btn-lg rounded-pill px-5 shadow">
+                Next Page <i class="fas fa-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="container text-center text-md-start">
+        <div class="row">
+          <div class="col-md-6 mb-4">
+            <div class="fw-bold text-success fs-4 mb-2">
+              Inspire Tech Academy
+            </div>
+            <p>
+              We bridge the gap between classroom theory and industrial reality.
+              Your AI career starts with a live URL, not just a grade.
+            </p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p>Location: Khattak Building, Nowshera Cantt</p>
+            <p>Instructor: Raheel Ahmad | 03462345453</p>
+          </div>
+        </div>
+        <hr class="border-secondary" />
+        <center class="small opacity-50">
+          © 2026 Inspire Tech Academy. All Rights Reserved.
+        </center>
+      </div>
+    </footer>
+
+    <script src="/support hub.js">
+      let currentQuestion = 1;
+      const questions = [
+        {
+          q: "Which mathematical method do we use to find the 'similarity' between two AI vectors?",
+          options: [
+            "Cosine Similarity",
+            "Addition and Subtraction",
+            "Random Selection",
+          ],
+          correct: 0,
+        },
+        {
+          q: "Which file is used to 'package' an AI app into a portable container?",
+          options: ["Index.php", "Dockerfile", "ReadMe.txt"],
+          correct: 1,
+        },
+        {
+          q: "What is the fastest library to build a UI for AI in Python?",
+          options: ["Django", "Streamlit", "React"],
+          correct: 1,
+        },
+      ];
+
+      function checkAnswer(isCorrect) {
+        const feedback = document.getElementById("feedback");
+        if (isCorrect) {
+          feedback.innerHTML =
+            "<span class='text-success animate__animated animate__flash'>✔️ Correct! Architecture Validated.</span>";
+          setTimeout(() => {
+            currentQuestion++;
+            if (currentQuestion <= 3) {
+              loadQuestion();
+              feedback.innerText = "";
+            } else {
+              feedback.innerHTML =
+                "<span class='text-info animate__animated animate__tada'>🎓 Industry Phase Complete! You are ready to deploy.</span>";
+              document
+                .getElementById("nav-container")
+                .classList.remove("d-none");
+            }
+          }, 1200);
+        } else {
+          feedback.innerHTML =
+            "<span class='text-danger animate__animated animate__shakeX'>❌ Incorrect! Think about the vector math.</span>";
+        }
+      }
+
+      function loadQuestion() {
+        const qData = questions[currentQuestion - 1];
+        document.getElementById("question-text").innerText =
+          `Q${currentQuestion}: ${qData.q}`;
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = "";
+        qData.options.forEach((opt, index) => {
+          const div = document.createElement("div");
+          div.className = "quiz-option";
+          div.innerText = opt;
+          div.onclick = () => checkAnswer(index === qData.correct);
+          optionsContainer.appendChild(div);
+        });
+      }
+
+      loadQuestion();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
+
+
+
+
+

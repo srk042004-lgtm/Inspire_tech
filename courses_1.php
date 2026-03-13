@@ -17,38 +17,9 @@
 
     <link rel="stylesheet" href="style.css">
   </head>
-  <body>
-    <nav class="navbar navbar-expand-lg fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="home_page.php"
-          >Inspire Tech School of IT</a
-        >
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="home_page.php">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="courses_1.php">Courses</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="student-portal.php">Student Portal</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="contact.php">Contact</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+  <body class="courses-page">
+
+    <?php include 'navbar.php'; ?>
 
     <header class="page-header">
       <div class="container">

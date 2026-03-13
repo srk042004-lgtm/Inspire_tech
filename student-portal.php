@@ -1,5 +1,5 @@
 <?php
-session_start();
+include 'secure_session.php';
 
 // if user already logged in send directly to dashboard
 if (isset($_SESSION['student_id'])) {
@@ -33,9 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error = 'Captcha answer is incorrect.';
       $step = 'verify';
     } else {
-      $res = mysqli_query($conn, "SELECT password FROM students WHERE email='$email' LIMIT 1");
-      if (mysqli_num_rows($res) === 1) {
-        $row = mysqli_fetch_assoc($res);
+      $stmt = $conn->prepare("SELECT password FROM students WHERE email = ? LIMIT 1");
+      $stmt->bind_param('s', $email);
+      $stmt->execute();
+      $res = $stmt->get_result();
+
+      if ($res && $res->num_rows === 1) {
+        $row = $res->fetch_assoc();
         if (password_verify($old, $row['password'])) {
           $step = 'newpass';
           $_SESSION['reset_email'] = $email; // Carry email to final step
@@ -47,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'No account found with that email.';
         $step = 'verify';
       }
+      $stmt->close();
     }
   }
 
@@ -64,7 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $step = 'login';
     } else {
       $hash = password_hash($new, PASSWORD_DEFAULT);
-      mysqli_query($conn, "UPDATE students SET password='$hash' WHERE email='$email'");
+      $stmt = $conn->prepare("UPDATE students SET password = ? WHERE email = ?");
+      $stmt->bind_param('ss', $hash, $email);
+      $stmt->execute();
+      $stmt->close();
       unset($_SESSION['reset_email']);
       $success = 'Password updated successfully! Please login.';
       $step = 'login';
@@ -73,26 +81,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // --- STEP 3: STANDARD LOGIN ---
   else {
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $email = filter_var($_POST['email'], FILTER_VALIDATE_EMAIL);
     $password = $_POST['password'];
 
-    $query = "SELECT id, name, password, enrolled_course, picture FROM students WHERE email = '$email' LIMIT 1";
-    $result = mysqli_query($conn, $query);
-
-    if (mysqli_num_rows($result) === 1) {
-      $row = mysqli_fetch_assoc($result);
-      if (password_verify($password, $row['password'])) {
-        $_SESSION['student_id'] = $row['id'];
-        $_SESSION['student_name'] = $row['name'];
-        $_SESSION['enrolled_course'] = $row['enrolled_course'];
-        $_SESSION['student_pic'] = $row['picture'] ?? '';
-        header('Location: student_dashboard.php');
-        exit;
-      } else {
-        $error = 'Incorrect password.';
-      }
+    if (!$email) {
+      $error = 'Please enter a valid email address.';
     } else {
-      $error = 'No account found with that email.';
+      $stmt = $conn->prepare("SELECT id, name, password, enrolled_course, picture FROM students WHERE email = ? LIMIT 1");
+      $stmt->bind_param('s', $email);
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      if ($result && $result->num_rows === 1) {
+        $row = $result->fetch_assoc();
+        if (password_verify($password, $row['password'])) {
+          session_regenerate_id(true);
+          $_SESSION['student_id'] = $row['id'];
+          $_SESSION['student_name'] = $row['name'];
+          $_SESSION['enrolled_course'] = $row['enrolled_course'];
+          $_SESSION['student_pic'] = $row['picture'] ?? '';
+          header('Location: student_dashboard.php');
+          exit;
+        } else {
+          $error = 'Incorrect password.';
+        }
+      } else {
+        $error = 'No account found with that email.';
+      }
+
+      $stmt->close();
     }
   }
 }
@@ -107,69 +124,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .portal-card {
-      background: #1e293b;
-      border-radius: 20px;
-      padding: 40px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-      border: 1px solid #334155;
-      margin-top: 50px;
-    }
-
-    .btn-premium {
-      background: linear-gradient(45deg, #00ffd5, #00a8ff);
-      border: none;
-      font-weight: bold;
-      color: #0f172a;
-      padding: 12px;
-    }
-
-    .form-control {
-      background: #0f172a;
-      border: 1px solid #334155;
-      color: white;
-      padding: 12px;
-    }
-
-    .form-control:focus {
-      background: #1e293b;
-      color: white;
-      border-color: #00ffd5;
-      box-shadow: none;
-    }
-
-    .academy-logo {
-      font-size: 1.5rem;
-      font-weight: 800;
-      background: linear-gradient(45deg, #00ffd5, #00a8ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .input-group-text {
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
-<body>
+<body class="portal-page">
 
-  <nav class="navbar navbar-expand-lg border-bottom border-secondary">
-    <div class="container">
-      <a class="navbar-brand academy-logo" href="home_page.php">INSPIRE TECH</a>
-      <a href="home_page.php" class="text-secondary text-decoration-none small"><i class="fas fa-arrow-left me-1"></i> Back</a>
-    </div>
-  </nav>
+  <?php include 'navbar_auth.php'; ?>
 
   <div class="container">
     <div class="row justify-content-center">
@@ -207,6 +167,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <button type="submit" class="btn btn-premium w-100 mb-3">Sign In <i class="fas fa-sign-in-alt ms-2"></i></button>
               <div class="text-center">
                 <a href="?step=verify" class="small text-info text-decoration-none">Forgot Password?</a>
+              </div>
+              <div class="text-center mt-2">
+                <span class="small text-secondary">New here? </span>
+                <a href="student-registration.php" class="small text-info text-decoration-none fw-bold">Create an account</a>
               </div>
             </form>
 
@@ -258,10 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
           <?php endif; ?>
 
-          <div class="mt-4 text-center border-top border-secondary pt-3">
-            <p class="small text-secondary mb-0">Don't have an account?</p>
-            <a href="student-registration.php" class="text-info fw-bold text-decoration-none">Create Account</a>
-          </div>
+         
         </div>
       </div>
     </div>
