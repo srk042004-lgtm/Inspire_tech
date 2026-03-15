@@ -380,7 +380,7 @@ if (isset($_GET['delete_course_fee'])) {
 
 if (isset($_POST['add_notice'])) {
     $txt = mysqli_real_escape_string($conn, $_POST['notice_text']);
-    $conn->query("INSERT INTO notices (notice_text) VALUES ('$txt')");
+    $conn->query("INSERT INTO notices (title, content) VALUES ('Notice', '$txt')");
     $msg = "Notice Sent!";
 }
 
@@ -520,9 +520,37 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="admin-dashboard">
-    <?php include 'navbar_admin.php'; ?>
-            <div class="row g-4 mb-4">
+<body class="dashboard-page admin-dashboard">
+    <?php
+        $adminName = $_SESSION['admin_name'] ?? 'Administrator';
+        $adminInitial = strtoupper(substr($adminName, 0, 1));
+    ?>
+    <div class="sidebar">
+        <div class="sidebar-profile">
+            <img src="uploads/340827876_5872631156182041_1179006399808807244_n.jpg" alt="Inspire Tech" class="sidebar-img">
+            <h6><?php echo htmlspecialchars($adminName); ?></h6>
+            <small>Administrator</small>
+        </div>
+        <a href="admin_dashboard.php" class="nav-link-custom active"><i class="fas fa-tachometer-alt"></i>Dashboard</a>
+        <a href="admin_cron_manager.php" class="nav-link-custom"><i class="fas fa-robot"></i>Automation</a>
+        <a href="home_page.php" class="nav-link-custom"><i class="fas fa-home"></i>Home</a>
+        <a href="logout.php" class="nav-link-custom text-danger"><i class="fas fa-sign-out-alt"></i>Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap">
+            <div>
+                <h1 class="mb-1">Admin Dashboard</h1>
+                <p class="text-muted mb-0">Welcome back, <?php echo htmlspecialchars($adminName); ?>.</p>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <button id="theme-toggle" class="btn btn-outline-secondary btn-sm" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
             <div class="col-md-4">
                 <div class="stat-card">
                     <h6>Total Students</h6>
@@ -1270,8 +1298,43 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
             <div class="modal-content">
                 <form method="POST">
                     <div class="modal-header">
-                        <h5>Edit Student Details</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5>Edit Student Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="edit_id" id="edit_id">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="edit_name" id="edit_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mobile</label>
+                            <input type="text" name="edit_phone" id="edit_phone" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Course</label>
+                            <input type="text" name="edit_course" id="edit_course" class="form-control">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col">
+                                <label class="form-label">Total Fee</label>
+                                <input type="number" step="0.01" name="edit_total" id="edit_total" class="form-control">
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Paid</label>
+                                <input type="number" step="0.01" name="edit_paid" id="edit_paid" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" name="update_student" class="btn btn-primary w-100">Update Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    </div> <!-- end main-content -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -1422,6 +1485,29 @@ $messages = $conn->query("SELECT * FROM contact_inquiries ORDER BY created_at DE
 
         // Initialize fee form values
         updateFeeFields();
+
+        // Theme toggle (persisted)
+        (function() {
+            const toggleBtn = document.getElementById('theme-toggle');
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            html.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+
+            function updateThemeIcon(theme) {
+                if (!toggleBtn) return;
+                toggleBtn.innerHTML = theme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            }
+
+            if (!toggleBtn) return;
+            toggleBtn.addEventListener('click', () => {
+                const current = html.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                updateThemeIcon(next);
+            });
+        })();
     </script>
 </body>
 

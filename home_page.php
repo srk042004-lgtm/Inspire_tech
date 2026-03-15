@@ -48,8 +48,8 @@ $total_freelancers = 450; // Manual stat
             <?php if($notices && $notices->num_rows > 0): ?>
                 <?php $notice = $notices->fetch_assoc(); ?>
                 <div class="luxury-card p-4 text-center">
-                    <h3 class="fw-bold mb-3"><?= htmlspecialchars($notice['title']) ?></h3>
-                    <p class="fs-5 mb-0"><?= nl2br(htmlspecialchars($notice['content'])) ?></p>
+                    <h3 class="fw-bold mb-3"><?= htmlspecialchars($notice['title'] ?? 'Notice') ?></h3>
+                    <p class="fs-5 mb-0"><?= nl2br(htmlspecialchars($notice['content'] ?? '')) ?></p>
                 </div>
             <?php else: ?>
                 <p class="text-center text-muted">No notices available at the moment.</p>

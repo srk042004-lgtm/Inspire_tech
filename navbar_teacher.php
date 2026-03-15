@@ -32,7 +32,7 @@ $teacherAvatar = $_SESSION['teacher_pic'] ?? null;
                     <li><a class="dropdown-item" href="teacher_dashboard.php"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
                     <li><a class="dropdown-item" href="teacher_monitor.php"><i class="fas fa-chart-line me-2"></i>Monitor</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    <li><a class="dropdown-item text-danger" href="teacher_logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                 </ul>
             </div>
         </div>

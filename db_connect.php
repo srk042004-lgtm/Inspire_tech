@@ -91,6 +91,9 @@ _ensureColumn($conn, 'students', 'enrollment_status', "enrollment_status VARCHAR
 _ensureColumn($conn, 'students', 'enrollment_requested_at', 'enrollment_requested_at DATETIME DEFAULT CURRENT_TIMESTAMP');
 _ensureColumn($conn, 'students', 'enrollment_approved_at', 'enrollment_approved_at DATETIME DEFAULT NULL');
 
+// Ensure teachers table has pic column
+_ensureColumn($conn, 'teachers', 'pic', 'pic VARCHAR(255) DEFAULT NULL');
+
 // Ensure contact inquiries table exists (some setups used contact_messages)
 $hasContactInquiries = ($conn->query("SHOW TABLES LIKE 'contact_inquiries'")->num_rows > 0);
 $hasContactMessages = ($conn->query("SHOW TABLES LIKE 'contact_messages'")->num_rows > 0);

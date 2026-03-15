@@ -526,8 +526,26 @@ body.portal-page {
   background: #0f172a;
   color: white;
   min-height: 100vh;
+  padding-top: 76px; /* Account for fixed navbar */
+}
+
+body.portal-page .auth-container {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 76px);
+  padding: 20px;
+}
+
+body.portal-page .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #1e293b;
 }
 
 body.portal-page .portal-card {
@@ -1290,15 +1308,23 @@ body.generate-cert-page .sig {
 }
 
 /* admin_login.php */
-body.admin-auth-page {
-  background: #020617;
-  color: #fff;
-  height: 100vh;
+body.admin-auth-page .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  background: rgba(2, 6, 23, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #1e293b;
+}
+
+body.admin-auth-page .auth-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Inter", sans-serif;
-  overflow: hidden;
+  min-height: calc(100vh - 76px);
+  padding: 20px;
 }
 
 body.admin-auth-page .auth-card {
@@ -2239,11 +2265,27 @@ html[data-theme="dark"] body.teacher-dashboard #sidebar .form-control-sm {
 /* teacher_login.php */
 body.teacher-login-page {
   background: #f0f2f5;
-  height: 100vh;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding-top: 76px; /* Account for fixed navbar */
+}
+
+body.teacher-login-page .auth-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  min-height: calc(100vh - 76px);
+  padding: 20px;
+}
+
+body.teacher-login-page .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
 }
 
 body.teacher-login-page .login-card {
